@@ -73,6 +73,9 @@ export default async function Footer() {
                 { label: 'Shop', href: '/shop' },
                 { label: 'PC Builder', href: '/builder' },
                 { label: 'Contact', href: '/contact' },
+                { label: 'Track Order', href: '/track-order' },
+                { label: 'Terms & Conditions', href: '/terms' },
+{ label: 'Privacy Policy', href: '/privacy' },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-[#a1a1aa] hover:text-white text-sm transition-colors">
