@@ -1,102 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 const budgetTiers = [
-  {
-    id: 'budget',
-    label: 'Budget Build',
-    range: 'Up to £500',
-    description: 'Great for everyday tasks, office work, and light gaming.',
-    icon: '💰',
-  },
-  {
-    id: 'mid',
-    label: 'Mid-Range Build',
-    range: '£500 – £1000',
-    description: 'Perfect for 1080p gaming, content creation, and multitasking.',
-    icon: '⚡',
-  },
-  {
-    id: 'high',
-    label: 'High-End Build',
-    range: '£1000 – £2000',
-    description: 'Serious performance for 1440p gaming and heavy workloads.',
-    icon: '🔥',
-  },
-  {
-    id: 'no_limit',
-    label: 'No Limit',
-    range: '£2000+',
-    description: 'The best of the best. Maximum performance, no compromises.',
-    icon: '👑',
-  },
+  { id: 'budget', label: 'Budget Build', range: 'Up to £500', description: 'Great for everyday tasks, office work, and light gaming.', icon: '💰' },
+  { id: 'mid', label: 'Mid-Range Build', range: '£500 – £1000', description: 'Perfect for 1080p gaming, content creation, and multitasking.', icon: '⚡' },
+  { id: 'high', label: 'High-End Build', range: '£1000 – £2000', description: 'Serious performance for 1440p gaming and heavy workloads.', icon: '🔥' },
+  { id: 'no_limit', label: 'No Limit', range: '£2000+', description: 'The best of the best. Maximum performance, no compromises.', icon: '👑' },
 ]
 
 const steps = ['Budget', 'CPU', 'GPU', 'RAM', 'Storage', 'Case', 'Review']
-
-const componentOptions: Record<string, Record<string, any[]>> = {
-  CPU: {
-    AMD: [
-      { name: 'AMD Ryzen 5 5600', price: 129, specs: '6-core, 12-thread, 3.5GHz base', tier: ['budget'] },
-      { name: 'AMD Ryzen 5 7600X', price: 199, specs: '6-core, 12-thread, 4.7GHz base', tier: ['budget', 'mid'] },
-      { name: 'AMD Ryzen 7 7700X', price: 299, specs: '8-core, 16-thread, 4.5GHz base', tier: ['mid'] },
-      { name: 'AMD Ryzen 7 7800X3D', price: 399, specs: '8-core, 16-thread, 4.5GHz + 3D V-Cache', tier: ['mid', 'high'] },
-      { name: 'AMD Ryzen 9 7900X', price: 449, specs: '12-core, 24-thread, 4.7GHz base', tier: ['high'] },
-      { name: 'AMD Ryzen 9 9950X', price: 699, specs: '16-core, 32-thread, 4.3GHz base', tier: ['no_limit'] },
-    ],
-    Intel: [
-      { name: 'Intel Core i5-12400F', price: 139, specs: '6-core, 12-thread, 2.5GHz base', tier: ['budget'] },
-      { name: 'Intel Core i5-13600K', price: 259, specs: '14-core, 20-thread, 3.5GHz base', tier: ['mid'] },
-      { name: 'Intel Core i7-13700K', price: 379, specs: '16-core, 24-thread, 3.4GHz base', tier: ['mid', 'high'] },
-      { name: 'Intel Core i9-13900K', price: 549, specs: '24-core, 32-thread, 3.0GHz base', tier: ['high'] },
-      { name: 'Intel Core i9-14900KS', price: 699, specs: '24-core, 32-thread, 3.2GHz base', tier: ['no_limit'] },
-    ],
-  },
-  GPU: {
-    Nvidia: [
-      { name: 'Nvidia RTX 3060', price: 249, specs: '12GB GDDR6, 1080p gaming', tier: ['budget'] },
-      { name: 'Nvidia RTX 4060', price: 299, specs: '8GB GDDR6, 1080p high settings', tier: ['budget', 'mid'] },
-      { name: 'Nvidia RTX 4060 Ti', price: 399, specs: '16GB GDDR6, 1440p gaming', tier: ['mid'] },
-      { name: 'Nvidia RTX 4070', price: 549, specs: '12GB GDDR6X, 1440p ultra', tier: ['mid', 'high'] },
-      { name: 'Nvidia RTX 4080', price: 999, specs: '16GB GDDR6X, 4K gaming', tier: ['high'] },
-      { name: 'Nvidia RTX 4090', price: 1599, specs: '24GB GDDR6X, maximum performance', tier: ['no_limit'] },
-    ],
-    AMD: [
-      { name: 'AMD RX 6650 XT', price: 219, specs: '8GB GDDR6, 1080p gaming', tier: ['budget'] },
-      { name: 'AMD RX 7600', price: 259, specs: '8GB GDDR6, 1080p high settings', tier: ['budget', 'mid'] },
-      { name: 'AMD RX 7700 XT', price: 349, specs: '12GB GDDR6, 1440p gaming', tier: ['mid'] },
-      { name: 'AMD RX 7800 XT', price: 449, specs: '16GB GDDR6, 1440p ultra', tier: ['mid', 'high'] },
-      { name: 'AMD RX 7900 XTX', price: 899, specs: '24GB GDDR6, 4K gaming', tier: ['high', 'no_limit'] },
-    ],
-  },
-  RAM: {
-    Any: [
-      { name: '16GB DDR4 3200MHz', price: 39, specs: '2x8GB, DDR4, 3200MHz', tier: ['budget'] },
-      { name: '32GB DDR4 3600MHz', price: 69, specs: '2x16GB, DDR4, 3600MHz', tier: ['budget', 'mid'] },
-      { name: '16GB DDR5 5600MHz', price: 59, specs: '2x8GB, DDR5, 5600MHz', tier: ['mid'] },
-      { name: '32GB DDR5 5600MHz', price: 89, specs: '2x16GB, DDR5, 5600MHz', tier: ['mid', 'high'] },
-      { name: '64GB DDR5 6000MHz', price: 169, specs: '2x32GB, DDR5, 6000MHz', tier: ['high', 'no_limit'] },
-    ],
-  },
-  Storage: {
-    Any: [
-      { name: '500GB NVMe SSD', price: 49, specs: 'PCIe 3.0, up to 3500MB/s', tier: ['budget'] },
-      { name: '1TB NVMe SSD', price: 79, specs: 'PCIe 4.0, up to 7000MB/s', tier: ['budget', 'mid'] },
-      { name: '2TB NVMe SSD', price: 129, specs: 'PCIe 4.0, up to 7000MB/s', tier: ['mid', 'high'] },
-      { name: '4TB NVMe SSD', price: 249, specs: 'PCIe 4.0, up to 7200MB/s', tier: ['high', 'no_limit'] },
-    ],
-  },
-  Case: {
-    Any: [
-      { name: 'Budget Mid Tower', price: 49, specs: 'Mesh front, 2 fans included', tier: ['budget'] },
-      { name: 'NZXT H510', price: 79, specs: 'Mid tower, clean design, 2 fans', tier: ['budget', 'mid'] },
-      { name: 'Lian Li Lancool 216', price: 109, specs: 'Mid tower, 2x160mm fans, ARGB', tier: ['mid'] },
-      { name: 'Fractal Design Torrent', price: 179, specs: 'Full tower, 2x180mm fans, high airflow', tier: ['mid', 'high'] },
-      { name: 'Lian Li O11 Dynamic EVO', price: 149, specs: 'Mid tower, dual chamber, ARGB', tier: ['high', 'no_limit'] },
-    ],
-  },
-}
+const componentSteps = ['CPU', 'GPU', 'RAM', 'Storage', 'Case']
+const hasBrands = (category: string) => category === 'CPU' || category === 'GPU'
 
 export default function BuilderPage() {
   const [step, setStep] = useState(0)
@@ -105,33 +21,47 @@ export default function BuilderPage() {
   const [brandChoice, setBrandChoice] = useState<Record<string, string>>({})
   const [customerInfo, setCustomerInfo] = useState({ name: '', email: '', phone: '' })
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [components, setComponents] = useState<Record<string, any[]>>({})
 
   const currentStep = steps[step]
   const total = Object.values(selected).reduce((sum, item) => sum + (item?.price || 0), 0)
-  const componentSteps = ['CPU', 'GPU', 'RAM', 'Storage', 'Case']
-  const hasBrands = (category: string) => category === 'CPU' || category === 'GPU'
 
-  const getFilteredComponents = (category: string, brand: string) => {
-    const items = componentOptions[category]?.[brand] || []
-    if (!budget) return items
-    return items.filter((item) => item.tier.includes(budget))
+  useEffect(() => {
+    const fetchComponents = async () => {
+      const { data } = await supabase
+        .from('builder_components')
+        .select('*')
+        .eq('in_stock', true)
+        .order('price', { ascending: true })
+
+      if (data) {
+        const grouped: Record<string, any[]> = {}
+        data.forEach((c) => {
+          if (!grouped[c.category]) grouped[c.category] = []
+          grouped[c.category].push(c)
+        })
+        setComponents(grouped)
+      }
+    }
+    fetchComponents()
+  }, [])
+
+  const getFilteredComponents = (category: string, brand?: string) => {
+    const items = components[category] || []
+    const filtered = brand && brand !== 'Any'
+      ? items.filter((i) => i.brand === brand)
+      : items
+    if (!budget) return filtered
+    return filtered.filter((i) => i.budget_tiers.includes(budget))
   }
 
-  const handleBrandSelect = (category: string, brand: string) => {
-    setBrandChoice({ ...brandChoice, [category]: brand })
+  const getBrands = (category: string) => {
+    const items = components[category] || []
+    return [...new Set(items.map((i) => i.brand))].filter((b) => b !== 'Any')
   }
 
-  const handleComponentSelect = (category: string, component: any) => {
-    setSelected({ ...selected, [category]: component })
-  }
-
-  const handleNext = () => {
-    if (step < steps.length - 1) setStep(step + 1)
-  }
-
-  const handleBack = () => {
-    if (step > 0) setStep(step - 1)
-  }
+  const handleNext = () => { if (step < steps.length - 1) setStep(step + 1) }
+  const handleBack = () => { if (step > 0) setStep(step - 1) }
 
   const handleSubmitBuild = async () => {
     setSubmitStatus('loading')
@@ -148,11 +78,8 @@ export default function BuilderPage() {
           total,
         }),
       })
-      if (res.ok) {
-        setSubmitStatus('success')
-      } else {
-        setSubmitStatus('error')
-      }
+      if (res.ok) setSubmitStatus('success')
+      else setSubmitStatus('error')
     } catch {
       setSubmitStatus('error')
     }
@@ -206,9 +133,7 @@ export default function BuilderPage() {
                   key={tier.id}
                   onClick={() => setBudget(tier.id)}
                   className={`text-left p-5 rounded-xl border transition-all duration-200 ${
-                    budget === tier.id
-                      ? 'border-[#2563eb] bg-[#2563eb]/10'
-                      : 'border-[#27272a] hover:border-[#3f3f46]'
+                    budget === tier.id ? 'border-[#2563eb] bg-[#2563eb]/10' : 'border-[#27272a] hover:border-[#3f3f46]'
                   }`}
                 >
                   <div className="text-2xl mb-2">{tier.icon}</div>
@@ -232,10 +157,10 @@ export default function BuilderPage() {
 
             {hasBrands(currentStep) && (
               <div className="grid grid-cols-2 gap-4 mb-6">
-                {Object.keys(componentOptions[currentStep]).map((brand) => (
+                {getBrands(currentStep).map((brand) => (
                   <button
                     key={brand}
-                    onClick={() => handleBrandSelect(currentStep, brand)}
+                    onClick={() => setBrandChoice({ ...brandChoice, [currentStep]: brand })}
                     className={`flex flex-col items-center justify-center p-6 rounded-xl border transition-all duration-200 ${
                       brandChoice[currentStep] === brand
                         ? 'border-[#2563eb] bg-[#2563eb]/10'
@@ -246,8 +171,7 @@ export default function BuilderPage() {
                       src={
                         brand === 'AMD' ? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg' :
                         brand === 'Intel' ? 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg' :
-                        brand === 'Nvidia' ? 'https://upload.wikimedia.org/wikipedia/commons/a/a4/NVIDIA_logo.svg' :
-                        ''
+                        brand === 'Nvidia' ? 'https://upload.wikimedia.org/wikipedia/commons/a/a4/NVIDIA_logo.svg' : ''
                       }
                       alt={brand}
                       className="h-12 object-contain mb-3"
@@ -260,17 +184,12 @@ export default function BuilderPage() {
             )}
 
             <div className="flex flex-col gap-3">
-              {(hasBrands(currentStep)
-                ? brandChoice[currentStep]
-                  ? getFilteredComponents(currentStep, brandChoice[currentStep])
-                  : []
-                : getFilteredComponents(currentStep, 'Any')
-              ).map((component) => (
+              {getFilteredComponents(currentStep, hasBrands(currentStep) ? brandChoice[currentStep] : 'Any').map((component) => (
                 <button
-                  key={component.name}
-                  onClick={() => handleComponentSelect(currentStep, component)}
+                  key={component.id}
+                  onClick={() => setSelected({ ...selected, [currentStep]: component })}
                   className={`flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-200 ${
-                    selected[currentStep]?.name === component.name
+                    selected[currentStep]?.id === component.id
                       ? 'border-[#2563eb] bg-[#2563eb]/10'
                       : 'border-[#27272a] hover:border-[#3f3f46]'
                   }`}

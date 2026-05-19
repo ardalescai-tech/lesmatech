@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import { getSettings } from '@/lib/settings'
 
 const values = [
   {
@@ -23,24 +25,15 @@ const values = [
   },
 ]
 
-const team = [
-  {
-    name: 'Arda',
-    role: 'Head of Development',
-    description: 'Full stack developer specialising in web development and custom PC builds. Passionate about building things that work.',
-  },
-  {
-    name: 'David',
-    role: 'Co-Founder & CEO',
-    description: 'Handles business operations, client relations, and strategy. Makes sure every project runs smoothly from start to finish.',
-  },
-]
+export default async function AboutPage() {
+  const { data: team } = await supabase
+    .from('team_members')
+    .select('*')
+    .order('order_index', { ascending: true })
 
-export default function AboutPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
 
-      {/* Header */}
       <div className="text-center mb-16">
         <div className="inline-flex items-center gap-2 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-full px-4 py-1.5 mb-6">
           <span className="text-[#3b82f6] text-sm font-medium">Who We Are</span>
@@ -51,7 +44,6 @@ export default function AboutPage() {
         </p>
       </div>
 
-      {/* Story */}
       <div className="bg-[#111111] border border-[#27272a] rounded-2xl p-8 sm:p-12 mb-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(37,99,235,0.06)_0%,transparent_60%)]" />
         <div className="relative max-w-3xl">
@@ -68,7 +60,6 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Values */}
       <div className="mb-16">
         <h2 className="text-2xl font-bold text-white mb-8 text-center">What We Stand For</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -82,24 +73,24 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Team */}
-      <div className="mb-16">
-        <h2 className="text-2xl font-bold text-white mb-8 text-center">The Team</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          {team.map((member) => (
-            <div key={member.name} className="bg-[#111111] border border-[#27272a] rounded-xl p-6 text-center hover:border-[#2563eb]/50 transition-all duration-300">
-              <div className="w-16 h-16 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-[#2563eb] font-bold text-xl">{member.name[0]}</span>
+      {team && team.length > 0 && (
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-white mb-8 text-center">The Team</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            {team.map((member: any) => (
+              <div key={member.id} className="bg-[#111111] border border-[#27272a] rounded-xl p-6 text-center hover:border-[#2563eb]/50 transition-all duration-300">
+                <div className="w-16 h-16 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-[#2563eb] font-bold text-xl">{member.name[0]}</span>
+                </div>
+                <h3 className="text-white font-bold text-lg mb-1">{member.name}</h3>
+                <p className="text-[#2563eb] text-sm font-medium mb-3">{member.role}</p>
+                <p className="text-[#a1a1aa] text-sm leading-relaxed">{member.description}</p>
               </div>
-              <h3 className="text-white font-bold text-lg mb-1">{member.name}</h3>
-              <p className="text-[#2563eb] text-sm font-medium mb-3">{member.role}</p>
-              <p className="text-[#a1a1aa] text-sm leading-relaxed">{member.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* CTA */}
       <div className="bg-[#111111] border border-[#27272a] rounded-2xl p-10 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(37,99,235,0.08)_0%,transparent_60%)]" />
         <div className="relative">

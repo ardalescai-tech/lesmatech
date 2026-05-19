@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -11,6 +12,21 @@ export default function ContactPage() {
     message: '',
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [settings, setSettings] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('site_settings').select('key, value')
+      if (data) {
+        const map = data.reduce((acc: Record<string, string>, item) => {
+          acc[item.key] = item.value
+          return acc
+        }, {})
+        setSettings(map)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +51,6 @@ export default function ContactPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
 
-      {/* Header */}
       <div className="text-center mb-16">
         <div className="inline-flex items-center gap-2 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-full px-4 py-1.5 mb-6">
           <span className="text-[#3b82f6] text-sm font-medium">Get In Touch</span>
@@ -48,33 +63,12 @@ export default function ContactPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-        {/* Contact info */}
         <div className="flex flex-col gap-6">
           {[
-            {
-              icon: '📧',
-              title: 'Email',
-              value: 'hello@lesmatech.co.uk',
-              sub: 'We reply within 24 hours',
-            },
-            {
-              icon: '💬',
-              title: 'WhatsApp',
-              value: '+44 XXXX XXXXXX',
-              sub: 'For quick questions & updates',
-            },
-            {
-              icon: '📍',
-              title: 'Location',
-              value: 'United Kingdom',
-              sub: 'Remote & in-person available',
-            },
-            {
-              icon: '🕐',
-              title: 'Hours',
-              value: 'Mon – Sat, 9am – 7pm',
-              sub: 'UK time',
-            },
+            { icon: '📧', title: 'Email', value: settings.email || 'hello@lesmatech.co.uk', sub: 'We reply within 24 hours' },
+            { icon: '💬', title: 'WhatsApp', value: settings.whatsapp || '+44 XXXX XXXXXX', sub: 'For quick questions & updates' },
+            { icon: '📍', title: 'Location', value: settings.location || 'United Kingdom', sub: 'Remote & in-person available' },
+            { icon: '🕐', title: 'Hours', value: settings.hours || 'Mon – Sat, 9am – 7pm', sub: 'UK time' },
           ].map((item) => (
             <div key={item.title} className="bg-[#111111] border border-[#27272a] rounded-xl p-5 flex items-start gap-4">
               <div className="text-2xl">{item.icon}</div>
@@ -87,7 +81,6 @@ export default function ContactPage() {
           ))}
         </div>
 
-        {/* Form */}
         <div className="lg:col-span-2 bg-[#111111] border border-[#27272a] rounded-xl p-8">
           {status === 'success' ? (
             <div className="text-center py-12">

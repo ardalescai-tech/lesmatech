@@ -96,6 +96,15 @@ export default function AdminDashboard() {
   <p className="text-[#a1a1aa] text-sm">Add and manage pre-built PC listings in the shop.</p>
 </Link>
 
+<Link
+  href="/admin/components"
+  className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
+>
+  <div className="text-3xl mb-3">🔧</div>
+  <h3 className="text-white font-bold text-lg mb-1">Builder Components</h3>
+  <p className="text-[#a1a1aa] text-sm">Manage components available in the PC Builder.</p>
+</Link>
+
         <Link
           href="/admin/orders"
           className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
@@ -122,6 +131,15 @@ export default function AdminDashboard() {
           <h3 className="text-white font-bold text-lg mb-1">View Site</h3>
           <p className="text-[#a1a1aa] text-sm">Go to the public-facing website.</p>
         </Link>
+
+        <Link
+  href="/admin/settings"
+  className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
+>
+  <div className="text-3xl mb-3">⚙️</div>
+  <h3 className="text-white font-bold text-lg mb-1">Site Settings</h3>
+  <p className="text-[#a1a1aa] text-sm">Update contact info, social links, and business hours.</p>
+</Link>
       </div>
     </div>
   )

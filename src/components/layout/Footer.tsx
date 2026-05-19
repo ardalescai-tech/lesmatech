@@ -1,6 +1,9 @@
 import Link from 'next/link'
+import { getSettings } from '@/lib/settings'
 
-export default function Footer() {
+export default async function Footer() {
+  const settings = await getSettings()
+
   return (
     <footer className="border-t border-[#27272a] bg-[#0a0a0a] mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -19,9 +22,32 @@ export default function Footer() {
             <p className="text-[#a1a1aa] text-sm leading-relaxed max-w-sm">
               Your local IT experts in the UK. Custom PC builds, web development, computer repairs, and hosting solutions.
             </p>
-            <p className="text-[#a1a1aa] text-sm mt-4">
-              📧 hello@lesmatech.co.uk
-            </p>
+            {settings.email && (
+              <p className="text-[#a1a1aa] text-sm mt-4">
+                📧 {settings.email}
+              </p>
+            )}
+            {settings.phone && (
+              <p className="text-[#a1a1aa] text-sm mt-1">
+                📞 {settings.phone}
+              </p>
+            )}
+            {settings.hours && (
+              <p className="text-[#a1a1aa] text-sm mt-1">
+                🕐 {settings.hours}
+              </p>
+            )}
+            <div className="flex gap-3 mt-4">
+              {settings.instagram && (
+                <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="text-[#a1a1aa] hover:text-white text-sm transition-colors">Instagram</a>
+              )}
+              {settings.twitter && (
+                <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="text-[#a1a1aa] hover:text-white text-sm transition-colors">Twitter</a>
+              )}
+              {settings.facebook && (
+                <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="text-[#a1a1aa] hover:text-white text-sm transition-colors">Facebook</a>
+              )}
+            </div>
           </div>
 
           {/* Services */}
