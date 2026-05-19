@@ -73,7 +73,7 @@ export default async function WebPackagesPage() {
             </ul>
 
             <Link
-              href={`/contact?package=${pkg.name}`}
+              href={`/web-quote`}
               className="block text-center bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors duration-200"
             >
               {pkg.price ? 'Get Started' : 'Contact Us'}

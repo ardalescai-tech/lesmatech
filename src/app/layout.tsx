@@ -9,8 +9,40 @@ import CookieBanner from '@/components/ui/CookieBanner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'LesmaTech — IT Services & Custom PC Builds in the UK',
-  description: 'Custom PC builds, web development, computer repairs, and hosting solutions. Your local IT experts in the UK.',
+  title: {
+    default: 'LesmaTech — Custom PC Builds & IT Services in the UK',
+    template: '%s | LesmaTech',
+  },
+  description: 'Custom PC builds, professional web development, computer repairs, and hosting solutions. Your trusted local IT experts in the UK.',
+  keywords: ['custom PC builds UK', 'computer repair UK', 'web development UK', 'IT services UK', 'PC builder', 'gaming PC UK'],
+  authors: [{ name: 'LesmaTech' }],
+  creator: 'LesmaTech',
+  openGraph: {
+    type: 'website',
+    locale: 'en_GB',
+    url: 'https://lesmatech.co.uk',
+    siteName: 'LesmaTech',
+    title: 'LesmaTech — Custom PC Builds & IT Services in the UK',
+    description: 'Custom PC builds, professional web development, computer repairs, and hosting solutions.',
+    images: [
+      {
+        url: '/hero-bg.png',
+        width: 1200,
+        height: 630,
+        alt: 'LesmaTech — Custom PC Builds & IT Services',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'LesmaTech — Custom PC Builds & IT Services in the UK',
+    description: 'Custom PC builds, professional web development, computer repairs, and hosting solutions.',
+    images: ['/hero-bg.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export default function RootLayout({

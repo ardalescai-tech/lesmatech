@@ -40,8 +40,8 @@ const services = [
       'Fast loading & secure',
       'Admin panel included',
     ],
-    cta: 'See Web Packages',
-    href: '/web-packages',
+    cta: 'Get a Web Quote',
+    href: '/web-quote',
   },
   {
     icon: '🔧',
@@ -55,7 +55,7 @@ const services = [
       'No fix, no fee guarantee',
     ],
     cta: 'Book a Repair',
-    href: '/contact',
+    href: '/repair-quote',
   },
   {
     icon: '☁️',
