@@ -18,12 +18,15 @@ const links = [
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { count } = useCart()
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
+      setIsLoggedIn(true)
+
       const { data } = await supabase
         .from('admins')
         .select('id')
@@ -31,7 +34,13 @@ export default function Navbar() {
         .single()
       if (data) setIsAdmin(true)
     }
-    checkAdmin()
+    checkAuth()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
@@ -39,7 +48,6 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#2563eb] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">LT</span>
@@ -49,7 +57,6 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop links */}
           <div className="hidden md:flex items-center gap-8">
             {links.map((link) => (
               <Link
@@ -70,7 +77,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* CTA + Cart */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/cart"
@@ -85,6 +91,23 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
+
+            {isLoggedIn ? (
+              <Link
+                href="/account"
+                className="border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                My Account
+              </Link>
+            ) : (
+              <Link
+                href="/account/login"
+                className="border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                Sign In
+              </Link>
+            )}
+
             <Link
               href="/contact"
               className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
@@ -93,7 +116,6 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile menu button */}
           <button
             className="md:hidden text-[#a1a1aa] hover:text-white"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -106,7 +128,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden border-t border-[#27272a] py-4 flex flex-col gap-4">
             {links.map((link) => (
@@ -120,11 +141,7 @@ export default function Navbar() {
               </Link>
             ))}
             {isAdmin && (
-              <Link
-                href="/admin/dashboard"
-                className="text-[#2563eb] text-sm font-medium"
-                onClick={() => setMenuOpen(false)}
-              >
+              <Link href="/admin/dashboard" className="text-[#2563eb] text-sm font-medium" onClick={() => setMenuOpen(false)}>
                 Admin
               </Link>
             )}
@@ -135,6 +152,15 @@ export default function Navbar() {
             >
               Cart {count > 0 && <span className="bg-[#2563eb] text-white text-xs px-1.5 py-0.5 rounded-full">{count}</span>}
             </Link>
+            {isLoggedIn ? (
+              <Link href="/account" className="text-[#a1a1aa] hover:text-white text-sm font-medium" onClick={() => setMenuOpen(false)}>
+                My Account
+              </Link>
+            ) : (
+              <Link href="/account/login" className="text-[#a1a1aa] hover:text-white text-sm font-medium" onClick={() => setMenuOpen(false)}>
+                Sign In
+              </Link>
+            )}
             <Link
               href="/contact"
               className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors w-fit"
