@@ -10,11 +10,13 @@ const budgetLabels: Record<string, string> = {
   no_limit: 'No Limit (£2000+)',
 }
 
-export default async function SharedBuildPage({ params }: { params: { id: string } }) {
+export default async function SharedBuildPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
   const { data: build } = await supabase
     .from('shared_builds')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!build) notFound()
@@ -23,7 +25,6 @@ export default async function SharedBuildPage({ params }: { params: { id: string
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-full px-4 py-1.5 mb-6">
           <span className="text-[#3b82f6] text-sm font-medium">Shared PC Build</span>
@@ -38,7 +39,6 @@ export default async function SharedBuildPage({ params }: { params: { id: string
             <span className="text-[#a1a1aa] text-sm">Budget</span>
             <span className="text-white text-sm font-medium">{budgetLabels[build.budget] || build.budget}</span>
           </div>
-
           {Object.entries(components).map(([category, component]: [string, any]) => (
             <div key={category} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
               <span className="text-[#a1a1aa] text-sm">{category}</span>
@@ -48,7 +48,6 @@ export default async function SharedBuildPage({ params }: { params: { id: string
               </div>
             </div>
           ))}
-
           <div className="flex items-center justify-between p-3 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-lg">
             <span className="text-white font-bold">Total (components only)</span>
             <span className="text-white font-bold text-xl">£{build.total}</span>
