@@ -5,6 +5,8 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { CartProvider } from '@/lib/CartContext'
 import CookieBanner from '@/components/ui/CookieBanner'
+import GoogleAnalytics from '@/components/ui/GoogleAnalytics'
+import WhatsAppWidget from '@/components/ui/WhatsAppWidget'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -60,6 +62,8 @@ export default function RootLayout({
           </main>
           <Footer />
           <CookieBanner />
+          <GoogleAnalytics />
+          <WhatsAppWidget />
         </CartProvider>
       </body>
     </html>

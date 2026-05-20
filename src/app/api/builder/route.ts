@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
+import { rateLimit } from '@/lib/ratelimit'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  if (!rateLimit(ip, 3, 60000)) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
+
   try {
     const body = await req.json()
     const { name, email, phone, budget, components, total } = body
@@ -13,7 +19,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Save order to Supabase
     const { data: order, error } = await getSupabaseAdmin()
       .from('orders')
       .insert({
@@ -30,7 +35,6 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    // Send email
     const componentsList = Object.entries(components)
       .map(([cat, comp]: [string, any]) => `<li><strong>${cat}:</strong> ${comp.name} — £${comp.price}</li>`)
       .join('')
