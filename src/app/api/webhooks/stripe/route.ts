@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
       // Send confirmation email
       await resend.emails.send({
-        from: 'LesmaTech <onboarding@resend.dev>',
+        from: `LesmaTech <${process.env.ADMIN_EMAIL}>`,
         to: customerEmail,
         subject: 'Order Confirmed — LesmaTech',
         html: `

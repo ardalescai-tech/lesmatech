@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
       .join('')
 
     await resend.emails.send({
-      from: 'LesmaTech <onboarding@resend.dev>',
-      to: 'arda16lescai@gmail.com',
+      from: `LesmaTech <${process.env.ADMIN_EMAIL}>`,
+      to: process.env.ADMIN_EMAIL!,
       subject: `New Custom PC Build — ${name}`,
       html: `
         <h2>New Custom PC Build Request</h2>

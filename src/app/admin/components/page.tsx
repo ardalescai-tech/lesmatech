@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const categories = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling', 'Other']
+const categories = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooler', 'Fans', 'Other']
 const brands = ['AMD', 'Intel', 'Nvidia', 'Samsung', 'WD', 'Seagate', 'Corsair', 'G.Skill', 'NZXT', 'Lian Li', 'Fractal', 'be quiet!', 'Seasonic', 'Any']
 const budgetTierOptions = ['budget', 'mid', 'high', 'no_limit']
 

@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
 
     // Send email via Resend
     await resend.emails.send({
-      from: 'LesmaTech <onboarding@resend.dev>',
-      to: 'arda16lescai@gmail.com',
+      from: `LesmaTech <${process.env.ADMIN_EMAIL}>`,
+      to: process.env.ADMIN_EMAIL!,
       subject: `New Contact: ${subject}`,
       html: `
         <h2>New message from LesmaTech website</h2>

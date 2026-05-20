@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const finalMessage = message || defaultMessage
 
     await resend.emails.send({
-      from: 'LesmaTech <onboarding@resend.dev>',
+      from: `LesmaTech <${process.env.ADMIN_EMAIL}>`,
       to: customerEmail,
       subject: `Order Update: ${statusLabel} — LesmaTech`,
       html: `
