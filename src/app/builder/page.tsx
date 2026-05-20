@@ -47,6 +47,8 @@ export default function BuilderPage() {
   const [customerInfo, setCustomerInfo] = useState({ name: '', email: '', phone: '' })
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [components, setComponents] = useState<Record<string, any[]>>({})
+  const [sharedBuildId, setSharedBuildId] = useState<string | null>(null)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const currentStep = steps[step]
   const total = Object.values(selected).reduce((sum, item) => sum + (item?.price || 0), 0)
@@ -105,6 +107,16 @@ export default function BuilderPage() {
   const handleSubmitBuild = async () => {
     setSubmitStatus('loading')
     try {
+      // Save shared build first
+      const { data: sharedBuild } = await supabase
+        .from('shared_builds')
+        .insert({ budget, components: selected, total })
+        .select()
+        .single()
+
+      if (sharedBuild) setSharedBuildId(sharedBuild.id)
+
+      // Submit order
       const res = await fetch('/api/builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,6 +134,19 @@ export default function BuilderPage() {
     } catch {
       setSubmitStatus('error')
     }
+  }
+
+  const handleCopyLink = async () => {
+    if (!sharedBuildId) return
+    await navigator.clipboard.writeText(`${window.location.origin}/builder/share/${sharedBuildId}`)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
+
+  const handleWhatsAppShare = () => {
+    if (!sharedBuildId) return
+    const url = `${window.location.origin}/builder/share/${sharedBuildId}`
+    window.open(`https://wa.me/?text=Check out my custom PC build on LesmaTech! ${encodeURIComponent(url)}`, '_blank')
   }
 
   return (
@@ -153,7 +178,6 @@ export default function BuilderPage() {
         ))}
       </div>
 
-      {/* Budget progress bar */}
       {budget && total > 0 && (
         <div className={`border rounded-xl px-6 py-4 mb-8 transition-all duration-300 ${
           isOverBudget ? 'bg-red-500/10 border-red-500/30' :
@@ -355,10 +379,30 @@ export default function BuilderPage() {
             </p>
 
             {submitStatus === 'success' ? (
-              <div className="text-center py-8">
+              <div className="text-center py-6">
                 <div className="text-5xl mb-4">✅</div>
                 <h3 className="text-white font-bold text-xl mb-2">Build Submitted!</h3>
-                <p className="text-[#a1a1aa]">We'll contact you within 24 hours to confirm your build.</p>
+                <p className="text-[#a1a1aa] mb-6">We'll contact you within 24 hours to confirm your build.</p>
+
+                {sharedBuildId && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-[#a1a1aa] text-sm">Share your build with friends:</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleCopyLink}
+                        className="flex-1 border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
+                      >
+                        {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
+                      </button>
+                      <button
+                        onClick={handleWhatsAppShare}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
+                      >
+                        Share on WhatsApp
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <button
