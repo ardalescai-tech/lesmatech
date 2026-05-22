@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
 
 const budgetTiers = [
   { id: 'budget', label: 'Budget Build', range: 'Up to £500', limit: 500, description: 'Great for everyday tasks, office work, and light gaming.', icon: '💰' },
@@ -13,6 +14,70 @@ const budgetTiers = [
 const steps = ['Budget', 'CPU', 'Motherboard', 'GPU', 'RAM', 'Storage', 'Cooler', 'Case', 'Fans', 'PSU', 'Review']
 const componentSteps = ['CPU', 'Motherboard', 'GPU', 'RAM', 'Storage', 'Cooler', 'Case', 'Fans', 'PSU']
 const hasBrands = (category: string) => ['CPU', 'GPU', 'Motherboard', 'Cooler'].includes(category)
+
+const stepIcons: Record<string, string> = {
+  Budget: '💰',
+  CPU: '🔲',
+  Motherboard: '🖥️',
+  GPU: '🎮',
+  RAM: '📦',
+  Storage: '💾',
+  Cooler: '❄️',
+  Case: '🗄️',
+  Fans: '🌀',
+  PSU: '⚡',
+  Review: '✅',
+}
+
+// Feedback inteligent per componenta
+const getComponentFeedback = (category: string, component: any, selected: Record<string, any>): { type: 'great' | 'good' | 'warning' | null, message: string } => {
+  const cpu = selected['CPU']
+  const gpu = selected['GPU']
+
+  if (category === 'CPU') {
+    if (component.price >= 400) return { type: 'great', message: 'Excellent choice! This CPU offers top-tier performance for gaming and workloads.' }
+    if (component.price >= 200) return { type: 'good', message: 'Good choice! Solid performance for most tasks and gaming at 1080p/1440p.' }
+    return { type: 'warning', message: 'Budget pick — fine for everyday use but may bottleneck a high-end GPU.' }
+  }
+
+  if (category === 'GPU') {
+    if (!cpu) return { type: null, message: '' }
+    const cpuPrice = cpu.price || 0
+    const gpuPrice = component.price || 0
+    const ratio = gpuPrice / (cpuPrice || 1)
+    if (ratio > 3.5) return { type: 'warning', message: `Your CPU (£${cpuPrice}) may bottleneck this GPU. Consider upgrading your CPU for max performance.` }
+    if (ratio < 0.5) return { type: 'warning', message: `This GPU may be underpowered compared to your CPU. You could get better visuals with a higher-tier GPU.` }
+    if (component.price >= 500) return { type: 'great', message: 'Great pairing! This GPU matches your CPU well and will deliver excellent frame rates.' }
+    return { type: 'good', message: 'Good balance. This GPU works well with your CPU for smooth gaming.' }
+  }
+
+  if (category === 'RAM') {
+    if (component.name?.includes('DDR5') && component.price >= 100) return { type: 'great', message: 'DDR5 RAM — future-proof and fast. Great pick for high-end builds.' }
+    if (component.name?.includes('DDR4')) return { type: 'good', message: 'DDR4 is reliable and cost-effective. A solid choice for most builds.' }
+    return { type: 'good', message: 'Decent RAM choice for your build.' }
+  }
+
+  if (category === 'Storage') {
+    if (component.name?.includes('4TB') || component.name?.includes('2TB')) return { type: 'great', message: 'Plenty of storage! You won\'t run out of space anytime soon.' }
+    if (component.name?.includes('NVMe') || component.name?.includes('SSD')) return { type: 'good', message: 'Fast NVMe storage — great boot and load times.' }
+    return { type: 'warning', message: 'Consider an NVMe SSD for significantly faster performance.' }
+  }
+
+  if (category === 'PSU') {
+    const totalWatts = (cpu?.price || 0) + (gpu?.price || 0)
+    if (component.name?.includes('1000W') || component.name?.includes('850W')) return { type: 'great', message: 'Plenty of headroom for your build. Future upgrades covered too.' }
+    if (component.name?.includes('650W') || component.name?.includes('750W')) return { type: 'good', message: 'Solid wattage for most builds. Should handle your components well.' }
+    return { type: 'warning', message: 'Make sure this PSU has enough wattage for your CPU + GPU combination.' }
+  }
+
+  if (category === 'Cooler') {
+    if (component.name?.includes('360') || component.name?.includes('280')) return { type: 'great', message: 'High-performance liquid cooling — your CPU will stay ice cold under load.' }
+    if (component.name?.includes('240') || component.name?.includes('AIO')) return { type: 'good', message: 'Good cooling solution. Handles most CPUs with ease.' }
+    return { type: 'good', message: 'Air cooling is reliable and quiet. Good pick for mid-range builds.' }
+  }
+
+  return { type: 'good', message: 'Good choice for your build.' }
+}
 
 type CompatibilityChecker = (comp: any) => string | null
 
@@ -40,6 +105,7 @@ const compatibilityRules: Record<string, (selected: Record<string, any>) => Comp
 }
 
 export default function BuilderPage() {
+  const [showWarning, setShowWarning] = useState(true)
   const [step, setStep] = useState(0)
   const [budget, setBudget] = useState<string | null>(null)
   const [selected, setSelected] = useState<Record<string, any>>({})
@@ -49,6 +115,8 @@ export default function BuilderPage() {
   const [components, setComponents] = useState<Record<string, any[]>>({})
   const [sharedBuildId, setSharedBuildId] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [lastFeedback, setLastFeedback] = useState<{ type: 'great' | 'good' | 'warning' | null, message: string } | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const currentStep = steps[step]
   const total = Object.values(selected).reduce((sum, item) => sum + (item?.price || 0), 0)
@@ -93,12 +161,20 @@ export default function BuilderPage() {
       ? items.filter((i) => i.brand === brand)
       : items
     if (!budget) return filtered
-    return filtered.filter((i) => i.budget_tiers.includes(budget))
+    return filtered.filter((i) => i.budget_tiers?.includes(budget))
   }
 
   const getBrands = (category: string) => {
     const items = components[category] || []
     return [...new Set(items.map((i) => i.brand))].filter((b) => b !== 'Any')
+  }
+
+  const handleSelectComponent = (category: string, component: any) => {
+    setSelected({ ...selected, [category]: component })
+    const feedback = getComponentFeedback(category, component, { ...selected, [category]: component })
+    setLastFeedback(feedback)
+    setShowFeedback(true)
+    setTimeout(() => setShowFeedback(false), 4000)
   }
 
   const handleNext = () => { if (step < steps.length - 1) setStep(step + 1) }
@@ -107,7 +183,6 @@ export default function BuilderPage() {
   const handleSubmitBuild = async () => {
     setSubmitStatus('loading')
     try {
-      // Save shared build first
       const { data: sharedBuild } = await supabase
         .from('shared_builds')
         .insert({ budget, components: selected, total })
@@ -116,7 +191,6 @@ export default function BuilderPage() {
 
       if (sharedBuild) setSharedBuildId(sharedBuild.id)
 
-      // Submit order
       const res = await fetch('/api/builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -149,304 +223,418 @@ export default function BuilderPage() {
     window.open(`https://wa.me/?text=Check out my custom PC build on LesmaTech! ${encodeURIComponent(url)}`, '_blank')
   }
 
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-full px-4 py-1.5 mb-6">
-          <span className="text-[#3b82f6] text-sm font-medium">Custom PC Builder</span>
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">Build Your PC</h1>
-        <p className="text-[#a1a1aa] text-lg max-w-xl mx-auto">
-          Choose your budget and components. We'll build and deliver it to you.
-        </p>
-      </div>
-
-      <div className="flex items-center justify-center gap-1 mb-12 flex-wrap">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-1">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-              i < step ? 'bg-green-500 text-white' :
-              i === step ? 'bg-[#2563eb] text-white' :
-              'bg-[#1a1a1a] border border-[#27272a] text-[#a1a1aa]'
-            }`}>
-              {i < step ? '✓' : i + 1}
-            </div>
-            <span className={`text-xs hidden lg:block ${i === step ? 'text-white' : 'text-[#a1a1aa]'}`}>{s}</span>
-            {i < steps.length - 1 && <div className="w-4 h-px bg-[#27272a]" />}
-          </div>
-        ))}
-      </div>
-
-      {budget && total > 0 && (
-        <div className={`border rounded-xl px-6 py-4 mb-8 transition-all duration-300 ${
-          isOverBudget ? 'bg-red-500/10 border-red-500/30' :
-          isWarning ? 'bg-yellow-400/10 border-yellow-400/30' :
-          'bg-green-500/10 border-green-500/30'
-        }`}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#a1a1aa] text-sm">Current total</span>
-            <span className="text-white font-bold text-xl">£{total}</span>
-          </div>
-
-          {budgetLimit !== Infinity && (
-            <>
-              <div className="w-full bg-[#1a1a1a] rounded-full h-2 mb-2 overflow-hidden">
-                <div
-                  className={`h-2 rounded-full transition-all duration-500 ${
-                    isOverBudget ? 'bg-red-500' : isWarning ? 'bg-yellow-400' : 'bg-green-500'
-                  }`}
-                  style={{ width: `${budgetPercent}%` }}
-                />
-              </div>
-              <p className={`text-xs font-medium ${
-                isOverBudget ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'
-              }`}>
-                {isOverBudget
-                  ? `Over budget by £${Math.abs(remaining).toFixed(0)}! Consider cheaper alternatives.`
-                  : isWarning
-                  ? `Almost at your budget limit. £${remaining.toFixed(0)} remaining.`
-                  : `Great value! £${remaining.toFixed(0)} remaining within your budget.`
-                }
-              </p>
-            </>
-          )}
-
-          {budgetLimit === Infinity && (
-            <p className="text-[#a1a1aa] text-xs">No budget limit — build freely.</p>
-          )}
-        </div>
-      )}
-
-      <div className="bg-[#111111] border border-[#27272a] rounded-2xl p-6 sm:p-8 mb-8">
-
-        {currentStep === 'Budget' && (
-          <div>
-            <h2 className="text-white font-bold text-2xl mb-2">Choose Your Budget</h2>
-            <p className="text-[#a1a1aa] mb-8">This helps us recommend the best components for your money.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {budgetTiers.map((tier) => (
-                <button
-                  key={tier.id}
-                  onClick={() => setBudget(tier.id)}
-                  className={`text-left p-5 rounded-xl border transition-all duration-200 ${
-                    budget === tier.id ? 'border-[#2563eb] bg-[#2563eb]/10' : 'border-[#27272a] hover:border-[#3f3f46]'
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{tier.icon}</div>
-                  <div className="text-white font-bold mb-1">{tier.label}</div>
-                  <div className="text-[#2563eb] text-sm font-medium mb-2">{tier.range}</div>
-                  <div className="text-[#a1a1aa] text-sm">{tier.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {componentSteps.includes(currentStep) && (
-          <div>
-            <h2 className="text-white font-bold text-2xl mb-2">Choose Your {currentStep}</h2>
-            <p className="text-[#a1a1aa] mb-6">
-              {selected[currentStep] && (
-                <span className="text-green-400">Selected: {selected[currentStep].name}</span>
-              )}
+  // Warning Modal
+  if (showWarning) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="relative max-w-lg w-full bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-8 text-center overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(37,99,235,0.15),transparent)]" />
+          <div className="relative">
+            <div className="text-5xl mb-4">⚠️</div>
+            <h2 className="text-white font-bold text-2xl mb-3">Hold on a second!</h2>
+            <p className="text-[#a1a1aa] mb-4 leading-relaxed">
+              The <span className="text-white font-semibold">PC Builder</span> is designed for users who are comfortable selecting individual components like CPU, GPU, RAM, and motherboard.
             </p>
+            <p className="text-[#a1a1aa] mb-8 leading-relaxed">
+              If you're not sure where to start, we recommend checking out our <span className="text-[#3b82f6] font-semibold">pre-built PCs</span> — hand-built machines for every budget, ready to ship.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/shop"
+                className="flex-1 bg-[#0d0d1a] border border-[#1e1e3a] hover:border-[#2563eb]/50 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 text-sm"
+              >
+                🛒 Browse Pre-Built PCs
+              </Link>
+              <button
+                onClick={() => setShowWarning(false)}
+                className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-6 py-3 rounded-xl transition-colors duration-200 text-sm"
+              >
+                I Know What I'm Doing →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-            {hasBrands(currentStep) && getBrands(currentStep).length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                {getBrands(currentStep).map((brand) => (
-                  <button
-                    key={brand}
-                    onClick={() => setBrandChoice({ ...brandChoice, [currentStep]: brand })}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 ${
-                      brandChoice[currentStep] === brand
-                        ? 'border-[#2563eb] bg-[#2563eb]/10'
-                        : 'border-[#27272a] hover:border-[#3f3f46] bg-[#1a1a1a]'
-                    }`}
-                  >
-                    {['AMD', 'Intel', 'Nvidia'].includes(brand) ? (
-                      <img
-                        src={
-                          brand === 'AMD' ? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg' :
-                          brand === 'Intel' ? 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg' :
-                          'https://upload.wikimedia.org/wikipedia/commons/a/a4/NVIDIA_logo.svg'
-                        }
-                        alt={brand}
-                        className="h-8 object-contain mb-2"
-                        style={{ filter: 'brightness(0) invert(1)' }}
-                      />
-                    ) : (
-                      <span className="text-white font-bold text-sm mb-2">{brand}</span>
-                    )}
-                    <span className="text-white text-xs font-medium">{brand}</span>
-                  </button>
-                ))}
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="relative py-12 text-center overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(37,99,235,0.15),transparent)]" />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-full px-4 py-1.5 mb-4">
+            <span className="text-[#3b82f6] text-sm font-medium">Custom PC Builder</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">Build Your PC</h1>
+          <p className="text-[#a1a1aa] text-lg max-w-xl mx-auto">Choose your components. We'll build and deliver it to you.</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        <div className="flex gap-8 items-start">
+
+          {/* LEFT — Steps Sidebar */}
+          <div className="hidden lg:flex flex-col gap-1 w-52 sticky top-24">
+            {steps.map((s, i) => (
+              <div
+                key={s}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                  i === step ? 'bg-[#2563eb]/15 border border-[#2563eb]/30' :
+                  i < step ? 'opacity-70' : 'opacity-30'
+                }`}
+              >
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                  i < step ? 'bg-green-500 text-white' :
+                  i === step ? 'bg-[#2563eb] text-white' :
+                  'bg-[#1e1e3a] text-[#a1a1aa]'
+                }`}>
+                  {i < step ? '✓' : stepIcons[s]}
+                </div>
+                <div>
+                  <div className={`text-xs font-semibold ${i === step ? 'text-white' : 'text-[#a1a1aa]'}`}>{s}</div>
+                  {selected[s] && <div className="text-[10px] text-[#3b82f6] truncate w-32">{selected[s].name}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* MAIN — Content */}
+          <div className="flex-1 min-w-0">
+
+            {/* Feedback toast */}
+            {showFeedback && lastFeedback?.type && (
+              <div className={`mb-4 px-4 py-3 rounded-xl border flex items-start gap-3 transition-all duration-300 ${
+                lastFeedback.type === 'great' ? 'bg-green-500/10 border-green-500/30' :
+                lastFeedback.type === 'good' ? 'bg-blue-500/10 border-blue-500/30' :
+                'bg-yellow-500/10 border-yellow-500/30'
+              }`}>
+                <span className="text-lg flex-shrink-0">
+                  {lastFeedback.type === 'great' ? '🏆' : lastFeedback.type === 'good' ? '👍' : '⚠️'}
+                </span>
+                <div>
+                  <div className={`text-sm font-semibold ${
+                    lastFeedback.type === 'great' ? 'text-green-400' :
+                    lastFeedback.type === 'good' ? 'text-blue-400' :
+                    'text-yellow-400'
+                  }`}>
+                    {lastFeedback.type === 'great' ? 'Great Choice!' : lastFeedback.type === 'good' ? 'Good Pick!' : 'Worth Considering'}
+                  </div>
+                  <div className="text-[#a1a1aa] text-xs mt-0.5">{lastFeedback.message}</div>
+                </div>
               </div>
             )}
 
-            <div className="flex flex-col gap-3">
-              {getFilteredComponents(currentStep, hasBrands(currentStep) ? brandChoice[currentStep] : 'Any').map((component) => {
-                const compatError = getCompatibilityError(currentStep, component)
-                return (
-                  <button
-                    key={component.id}
-                    onClick={() => !compatError && setSelected({ ...selected, [currentStep]: component })}
-                    className={`flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-200 ${
-                      compatError ? 'border-red-500/30 opacity-50 cursor-not-allowed' :
-                      selected[currentStep]?.id === component.id
-                        ? 'border-[#2563eb] bg-[#2563eb]/10'
-                        : 'border-[#27272a] hover:border-[#3f3f46]'
-                    }`}
-                  >
-                    <div className="flex-1">
-                      <div className="text-white font-medium">{component.name}</div>
-                      <div className="text-[#a1a1aa] text-sm mt-0.5">{component.specs}</div>
-                      {compatError && (
-                        <div className="text-red-400 text-xs mt-1">⚠️ {compatError}</div>
-                      )}
+            {/* Budget progress bar */}
+            {budget && total > 0 && (
+              <div className={`border rounded-xl px-5 py-4 mb-6 transition-all duration-300 ${
+                isOverBudget ? 'bg-red-500/10 border-red-500/30' :
+                isWarning ? 'bg-yellow-400/10 border-yellow-400/30' :
+                'bg-green-500/10 border-green-500/30'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[#a1a1aa] text-sm">Current total</span>
+                  <span className="text-white font-bold text-xl">£{total}</span>
+                </div>
+                {budgetLimit !== Infinity && (
+                  <>
+                    <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 mb-2 overflow-hidden">
+                      <div
+                        className={`h-1.5 rounded-full transition-all duration-500 ${
+                          isOverBudget ? 'bg-red-500' : isWarning ? 'bg-yellow-400' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${budgetPercent}%` }}
+                      />
                     </div>
-                    <div className="text-white font-bold text-lg ml-4">£{component.price}</div>
-                  </button>
-                )
-              })}
+                    <p className={`text-xs font-medium ${
+                      isOverBudget ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'
+                    }`}>
+                      {isOverBudget
+                        ? `Over budget by £${Math.abs(remaining).toFixed(0)}!`
+                        : isWarning
+                        ? `Almost at limit — £${remaining.toFixed(0)} remaining.`
+                        : `£${remaining.toFixed(0)} remaining within budget.`}
+                    </p>
+                  </>
+                )}
+                {budgetLimit === Infinity && <p className="text-[#a1a1aa] text-xs">No budget limit — build freely.</p>}
+              </div>
+            )}
 
-              {hasBrands(currentStep) && !brandChoice[currentStep] && getBrands(currentStep).length > 0 && (
-                <p className="text-[#a1a1aa] text-sm text-center py-4">Select a brand above to see options.</p>
+            {/* Step Content */}
+            <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-6 sm:p-8 mb-6">
+
+              {currentStep === 'Budget' && (
+                <div>
+                  <h2 className="text-white font-bold text-2xl mb-2">Choose Your Budget</h2>
+                  <p className="text-[#a1a1aa] mb-8">This helps us recommend the best components for your money.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {budgetTiers.map((tier) => (
+                      <button
+                        key={tier.id}
+                        onClick={() => setBudget(tier.id)}
+                        className={`text-left p-5 rounded-xl border transition-all duration-200 ${
+                          budget === tier.id
+                            ? 'border-[#2563eb] bg-[#2563eb]/10 shadow-lg shadow-blue-500/10'
+                            : 'border-[#1e1e3a] hover:border-[#2563eb]/40 bg-[#080818]'
+                        }`}
+                      >
+                        <div className="text-2xl mb-2">{tier.icon}</div>
+                        <div className="text-white font-bold mb-1">{tier.label}</div>
+                        <div className="text-[#2563eb] text-sm font-medium mb-2">{tier.range}</div>
+                        <div className="text-[#a1a1aa] text-sm">{tier.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
-              {getFilteredComponents(currentStep, hasBrands(currentStep) ? brandChoice[currentStep] : 'Any').length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-[#a1a1aa] text-sm">No components available for this category yet.</p>
-                  <p className="text-[#3f3f46] text-xs mt-1">Check back soon or contact us for a custom quote.</p>
+              {componentSteps.includes(currentStep) && (
+                <div>
+                  <h2 className="text-white font-bold text-2xl mb-1">Choose Your {currentStep}</h2>
+                  <p className="text-[#a1a1aa] text-sm mb-6">
+                    {selected[currentStep]
+                      ? <span className="text-green-400">✓ Selected: {selected[currentStep].name}</span>
+                      : 'Pick the best option for your build.'}
+                  </p>
+
+                  {hasBrands(currentStep) && getBrands(currentStep).length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                      {getBrands(currentStep).map((brand) => (
+                        <button
+                          key={brand}
+                          onClick={() => setBrandChoice({ ...brandChoice, [currentStep]: brand })}
+                          className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 ${
+                            brandChoice[currentStep] === brand
+                              ? 'border-[#2563eb] bg-[#2563eb]/10'
+                              : 'border-[#1e1e3a] hover:border-[#2563eb]/40 bg-[#080818]'
+                          }`}
+                        >
+                          {['AMD', 'Intel', 'Nvidia'].includes(brand) ? (
+                            <img
+                              src={
+                                brand === 'AMD' ? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg' :
+                                brand === 'Intel' ? 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg' :
+                                'https://upload.wikimedia.org/wikipedia/commons/a/a4/NVIDIA_logo.svg'
+                              }
+                              alt={brand}
+                              className="h-8 object-contain mb-2"
+                              style={{ filter: 'brightness(0) invert(1)' }}
+                            />
+                          ) : (
+                            <span className="text-white font-bold text-sm mb-2">{brand}</span>
+                          )}
+                          <span className="text-white text-xs font-medium">{brand}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-3">
+                    {getFilteredComponents(currentStep, hasBrands(currentStep) ? brandChoice[currentStep] : 'Any').map((component) => {
+                      const compatError = getCompatibilityError(currentStep, component)
+                      const isSelected = selected[currentStep]?.id === component.id
+                      return (
+                        <button
+                          key={component.id}
+                          onClick={() => !compatError && handleSelectComponent(currentStep, component)}
+                          className={`flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-200 ${
+                            compatError ? 'border-red-500/20 opacity-40 cursor-not-allowed bg-red-500/5' :
+                            isSelected
+                              ? 'border-[#2563eb] bg-[#2563eb]/10 shadow-lg shadow-blue-500/10'
+                              : 'border-[#1e1e3a] hover:border-[#2563eb]/40 bg-[#080818]'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="text-white font-medium">{component.name}</div>
+                            <div className="text-[#a1a1aa] text-sm mt-0.5">{component.specs}</div>
+                            {compatError && <div className="text-red-400 text-xs mt-1">⚠️ {compatError}</div>}
+                          </div>
+                          <div className="flex items-center gap-3 ml-4">
+                            <div className="text-white font-bold text-lg">£{component.price}</div>
+                            {isSelected && <div className="w-2 h-2 bg-green-400 rounded-full" />}
+                          </div>
+                        </button>
+                      )
+                    })}
+
+                    {hasBrands(currentStep) && !brandChoice[currentStep] && getBrands(currentStep).length > 0 && (
+                      <p className="text-[#a1a1aa] text-sm text-center py-4">Select a brand above to see options.</p>
+                    )}
+
+                    {getFilteredComponents(currentStep, hasBrands(currentStep) ? brandChoice[currentStep] : 'Any').length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-[#a1a1aa] text-sm">No components available for this category yet.</p>
+                        <p className="text-[#3f3f46] text-xs mt-1">Check back soon or contact us for a custom quote.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 'Review' && (
+                <div>
+                  <h2 className="text-white font-bold text-2xl mb-6">Your Build</h2>
+                  <div className="flex flex-col gap-2 mb-8">
+                    <div className="flex items-center justify-between p-3 bg-[#080818] rounded-lg border border-[#1e1e3a]">
+                      <span className="text-[#a1a1aa] text-sm">Budget Tier</span>
+                      <span className="text-white text-sm font-medium">{budgetTiers.find(t => t.id === budget)?.label}</span>
+                    </div>
+                    {componentSteps.map((cat) => (
+                      selected[cat] && (
+                        <div key={cat} className="flex items-center justify-between p-3 bg-[#080818] rounded-lg border border-[#1e1e3a]">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{stepIcons[cat]}</span>
+                            <span className="text-[#a1a1aa] text-sm">{cat}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-white text-sm font-medium">{selected[cat].name}</div>
+                            <div className="text-[#2563eb] text-xs">£{selected[cat].price}</div>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                    <div className="flex items-center justify-between p-4 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-xl mt-2">
+                      <span className="text-white font-bold">Total (components only)</span>
+                      <span className="text-white font-bold text-2xl">£{total}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 mb-6">
+                    <h3 className="text-white font-semibold">Your Details</h3>
+                    <input
+                      type="text"
+                      placeholder="Full Name *"
+                      value={customerInfo.name}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email *"
+                      value={customerInfo.email}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Phone / WhatsApp"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
+                    />
+                  </div>
+
+                  <p className="text-[#a1a1aa] text-sm mb-6">
+                    * Final price includes labour, cable management, OS installation, and stress testing. We'll confirm the exact price via WhatsApp.
+                  </p>
+
+                  {submitStatus === 'success' ? (
+                    <div className="text-center py-6">
+                      <div className="text-5xl mb-4">✅</div>
+                      <h3 className="text-white font-bold text-xl mb-2">Build Submitted!</h3>
+                      <p className="text-[#a1a1aa] mb-6">We'll contact you within 24 hours to confirm your build.</p>
+                      {sharedBuildId && (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-[#a1a1aa] text-sm">Share your build:</p>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={handleCopyLink}
+                              className="flex-1 border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
+                            >
+                              {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
+                            </button>
+                            <button
+                              onClick={handleWhatsAppShare}
+                              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
+                            >
+                              Share on WhatsApp
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleSubmitBuild}
+                      disabled={submitStatus === 'loading' || !customerInfo.name || !customerInfo.email}
+                      className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 text-white font-semibold px-8 py-4 rounded-xl transition-colors duration-200 text-lg shadow-lg shadow-blue-500/20"
+                    >
+                      {submitStatus === 'loading' ? 'Submitting...' : 'Submit My Build →'}
+                    </button>
+                  )}
+
+                  {submitStatus === 'error' && (
+                    <p className="text-red-400 text-sm mt-3 text-center">Something went wrong. Please try again.</p>
+                  )}
                 </div>
               )}
             </div>
+
+            {/* Navigation */}
+            {currentStep !== 'Review' && (
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handleBack}
+                  disabled={step === 0}
+                  className="border border-[#1e1e3a] text-[#a1a1aa] hover:text-white disabled:opacity-30 px-6 py-3 rounded-xl transition-colors text-sm font-medium"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={
+                    (currentStep === 'Budget' && !budget) ||
+                    (componentSteps.includes(currentStep) && !selected[currentStep]) ||
+                    isOverBudget
+                  }
+                  className={`font-semibold px-6 py-3 rounded-xl transition-colors text-sm ${
+                    isOverBudget
+                      ? 'bg-red-500/20 border border-red-500/30 text-red-400 cursor-not-allowed'
+                      : 'bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-30 text-white shadow-lg shadow-blue-500/20'
+                  }`}
+                >
+                  {isOverBudget ? 'Over Budget — Go Back' : 'Next →'}
+                </button>
+              </div>
+            )}
           </div>
-        )}
 
-        {currentStep === 'Review' && (
-          <div>
-            <h2 className="text-white font-bold text-2xl mb-6">Your Build</h2>
-            <div className="flex flex-col gap-3 mb-8">
-              <div className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
-                <span className="text-[#a1a1aa] text-sm">Budget</span>
-                <span className="text-white text-sm font-medium">{budgetTiers.find(t => t.id === budget)?.label}</span>
-              </div>
-              {componentSteps.map((cat) => (
-                selected[cat] && (
-                  <div key={cat} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
-                    <span className="text-[#a1a1aa] text-sm">{cat}</span>
-                    <div className="text-right">
-                      <div className="text-white text-sm font-medium">{selected[cat].name}</div>
-                      <div className="text-[#2563eb] text-xs">£{selected[cat].price}</div>
+          {/* RIGHT — Build Summary Sidebar */}
+          <div className="hidden xl:flex flex-col w-64 sticky top-24">
+            <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-5">
+              <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                <span>🖥️</span> Your Build
+              </h3>
+              <div className="flex flex-col gap-2 mb-4">
+                {steps.filter(s => s !== 'Budget' && s !== 'Review').map((s) => (
+                  <div key={s} className="flex items-center gap-2 py-1.5 border-b border-[#1e1e3a] last:border-0">
+                    <span className="text-sm w-5">{stepIcons[s]}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[#a1a1aa] text-[10px] uppercase tracking-wide">{s}</div>
+                      {selected[s]
+                        ? <div className="text-white text-xs truncate font-medium">{selected[s].name}</div>
+                        : <div className="text-[#3f3f46] text-xs">Not selected</div>}
                     </div>
+                    {selected[s] && <div className="text-[#2563eb] text-xs font-medium flex-shrink-0">£{selected[s].price}</div>}
                   </div>
-                )
-              ))}
-              <div className="flex items-center justify-between p-3 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-lg">
-                <span className="text-white font-bold">Total (components only)</span>
-                <span className="text-white font-bold text-xl">£{total}</span>
+                ))}
               </div>
-            </div>
-
-            <div className="flex flex-col gap-4 mb-6">
-              <h3 className="text-white font-semibold">Your Details</h3>
-              <input
-                type="text"
-                placeholder="Full Name *"
-                value={customerInfo.name}
-                onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                className="w-full bg-[#1a1a1a] border border-[#27272a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-              />
-              <input
-                type="email"
-                placeholder="Email *"
-                value={customerInfo.email}
-                onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                className="w-full bg-[#1a1a1a] border border-[#27272a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-              />
-              <input
-                type="tel"
-                placeholder="Phone / WhatsApp"
-                value={customerInfo.phone}
-                onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                className="w-full bg-[#1a1a1a] border border-[#27272a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-              />
-            </div>
-
-            <p className="text-[#a1a1aa] text-sm mb-6">
-              * Final price includes labour, cable management, OS installation, and stress testing. We'll confirm the exact price via WhatsApp.
-            </p>
-
-            {submitStatus === 'success' ? (
-              <div className="text-center py-6">
-                <div className="text-5xl mb-4">✅</div>
-                <h3 className="text-white font-bold text-xl mb-2">Build Submitted!</h3>
-                <p className="text-[#a1a1aa] mb-6">We'll contact you within 24 hours to confirm your build.</p>
-
-                {sharedBuildId && (
-                  <div className="flex flex-col gap-3">
-                    <p className="text-[#a1a1aa] text-sm">Share your build with friends:</p>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleCopyLink}
-                        className="flex-1 border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
-                      >
-                        {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
-                      </button>
-                      <button
-                        onClick={handleWhatsAppShare}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
-                      >
-                        Share on WhatsApp
-                      </button>
-                    </div>
+              <div className="bg-[#080818] rounded-xl p-3 border border-[#1e1e3a]">
+                <div className="text-[#a1a1aa] text-xs mb-1">Total so far</div>
+                <div className="text-white font-bold text-xl">£{total}</div>
+                {budgetLimit !== Infinity && (
+                  <div className={`text-xs mt-1 ${isOverBudget ? 'text-red-400' : 'text-green-400'}`}>
+                    {isOverBudget ? `£${Math.abs(remaining).toFixed(0)} over budget` : `£${remaining.toFixed(0)} remaining`}
                   </div>
                 )}
               </div>
-            ) : (
-              <button
-                onClick={handleSubmitBuild}
-                disabled={submitStatus === 'loading' || !customerInfo.name || !customerInfo.email}
-                className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 text-white font-semibold px-8 py-4 rounded-xl transition-colors duration-200 text-lg"
-              >
-                {submitStatus === 'loading' ? 'Submitting...' : 'Submit My Build →'}
-              </button>
-            )}
-
-            {submitStatus === 'error' && (
-              <p className="text-red-400 text-sm mt-3 text-center">Something went wrong. Please try again.</p>
-            )}
+            </div>
           </div>
-        )}
-      </div>
 
-      {currentStep !== 'Review' && (
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            disabled={step === 0}
-            className="border border-[#27272a] text-[#a1a1aa] hover:text-white disabled:opacity-30 px-6 py-3 rounded-xl transition-colors text-sm font-medium"
-          >
-            ← Back
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={
-              (currentStep === 'Budget' && !budget) ||
-              (componentSteps.includes(currentStep) && !selected[currentStep]) ||
-              isOverBudget
-            }
-            className={`font-semibold px-6 py-3 rounded-xl transition-colors text-sm ${
-              isOverBudget
-                ? 'bg-red-500/20 border border-red-500/30 text-red-400 cursor-not-allowed'
-                : 'bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-30 text-white'
-            }`}
-          >
-            {isOverBudget ? 'Over Budget — Go Back' : 'Next →'}
-          </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }

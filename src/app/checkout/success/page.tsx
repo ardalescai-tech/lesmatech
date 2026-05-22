@@ -2,29 +2,37 @@ import Link from 'next/link'
 
 export default function CheckoutSuccessPage() {
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-      <div className="bg-[#111111] border border-[#27272a] rounded-2xl p-12">
-        <div className="text-6xl mb-6">✅</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Order Confirmed!</h1>
-        <p className="text-[#a1a1aa] mb-4">
-          Thank you for your order. We've received your payment and will start processing your build immediately.
-        </p>
-        <p className="text-[#a1a1aa] mb-8">
-          You'll receive a confirmation email shortly. We'll contact you via WhatsApp with updates on your order.
-        </p>
+    <div className="min-h-screen">
+      <div className="relative py-12 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(37,99,235,0.12),transparent)]" />
+      </div>
 
-        <div className="bg-[#1a1a1a] border border-[#27272a] rounded-xl p-5 mb-8 text-left">
-          <h3 className="text-white font-semibold mb-3">What happens next?</h3>
-          <div className="flex flex-col gap-3">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-10 text-center mb-6">
+          <div className="w-16 h-16 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl">✅</span>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-3">Order Confirmed!</h1>
+          <p className="text-[#a1a1aa] mb-2">
+            Thank you for your order. We've received your payment and will start processing your build immediately.
+          </p>
+          <p className="text-[#a1a1aa] text-sm">
+            You'll receive a confirmation email shortly. We'll contact you via WhatsApp with updates.
+          </p>
+        </div>
+
+        <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-6 mb-6">
+          <h3 className="text-white font-semibold mb-4">What happens next?</h3>
+          <div className="flex flex-col gap-4">
             {[
-              { step: '1', text: 'We review your order and source all components' },
-              { step: '2', text: 'We contact you via WhatsApp to confirm details' },
-              { step: '3', text: 'We assemble and stress test your PC' },
-              { step: '4', text: 'We ship your order with a tracking number' },
+              { step: '1', icon: '🔍', text: 'We review your order and source all components' },
+              { step: '2', icon: '📱', text: 'We contact you via WhatsApp to confirm details' },
+              { step: '3', icon: '🔧', text: 'We assemble and stress test your PC' },
+              { step: '4', icon: '🚚', text: 'We ship your order with a tracking number' },
             ].map((item) => (
-              <div key={item.step} className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-[#2563eb] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold">{item.step}</span>
+              <div key={item.step} className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-lg">{item.icon}</span>
                 </div>
                 <span className="text-[#a1a1aa] text-sm">{item.text}</span>
               </div>
@@ -32,18 +40,12 @@ export default function CheckoutSuccessPage() {
           </div>
         </div>
 
-        <div className="flex gap-3 justify-center">
-          <Link
-            href="/"
-            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-          >
+        <div className="flex gap-3">
+          <Link href="/" className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-6 py-3 rounded-xl transition-colors text-center shadow-lg shadow-blue-500/20">
             Back to Home
           </Link>
-          <Link
-            href="/shop"
-            className="border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-          >
-            Continue Shopping
+          <Link href="/track-order" className="flex-1 border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white font-semibold px-6 py-3 rounded-xl transition-colors text-center">
+            Track Order
           </Link>
         </div>
       </div>

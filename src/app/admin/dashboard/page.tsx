@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ products: 0, orders: 0, messages: 0 })
+  const [stats, setStats] = useState({ products: 0, orders: 0, messages: 0, shopComponents: 0 })
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -18,16 +18,18 @@ export default function AdminDashboard() {
         return
       }
 
-      const [products, orders, messages] = await Promise.all([
+      const [products, orders, messages, shopComponents] = await Promise.all([
         supabase.from('products').select('id', { count: 'exact' }),
         supabase.from('orders').select('id', { count: 'exact' }),
         supabase.from('contact_messages').select('id', { count: 'exact' }),
+        supabase.from('shop_components').select('id', { count: 'exact' }),
       ])
 
       setStats({
         products: products.count || 0,
         orders: orders.count || 0,
         messages: messages.count || 0,
+        shopComponents: shopComponents.count || 0,
       })
       setLoading(false)
     }
@@ -62,11 +64,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-10">
         {[
           { label: 'Total Products', value: stats.products, icon: '📦' },
           { label: 'Total Orders', value: stats.orders, icon: '🛒' },
           { label: 'Messages', value: stats.messages, icon: '✉️' },
+          { label: 'Shop Components', value: stats.shopComponents, icon: '⚙️' },
         ].map((stat) => (
           <div key={stat.label} className="bg-[#111111] border border-[#27272a] rounded-xl p-6">
             <div className="text-2xl mb-2">{stat.icon}</div>
@@ -78,68 +81,53 @@ export default function AdminDashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <Link
-          href="/admin/products"
-          className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
-        >
+        <Link href="/admin/products" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
           <div className="text-3xl mb-3">📦</div>
           <h3 className="text-white font-bold text-lg mb-1">Manage Products</h3>
           <p className="text-[#a1a1aa] text-sm">Add, edit, or remove components from the shop.</p>
         </Link>
 
-<Link
-  href="/admin/prebuilt"
-  className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
->
-  <div className="text-3xl mb-3">🖥️</div>
-  <h3 className="text-white font-bold text-lg mb-1">Pre-Built PCs</h3>
-  <p className="text-[#a1a1aa] text-sm">Add and manage pre-built PC listings in the shop.</p>
-</Link>
+        <Link href="/admin/prebuilt" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
+          <div className="text-3xl mb-3">🖥️</div>
+          <h3 className="text-white font-bold text-lg mb-1">Pre-Built PCs</h3>
+          <p className="text-[#a1a1aa] text-sm">Add and manage pre-built PC listings in the shop.</p>
+        </Link>
 
-<Link
-  href="/admin/components"
-  className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
->
-  <div className="text-3xl mb-3">🔧</div>
-  <h3 className="text-white font-bold text-lg mb-1">Builder Components</h3>
-  <p className="text-[#a1a1aa] text-sm">Manage components available in the PC Builder.</p>
-</Link>
+        <Link href="/admin/components" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
+          <div className="text-3xl mb-3">🔧</div>
+          <h3 className="text-white font-bold text-lg mb-1">Builder Components</h3>
+          <p className="text-[#a1a1aa] text-sm">Manage components available in the PC Builder.</p>
+        </Link>
 
-        <Link
-          href="/admin/orders"
-          className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
-        >
+        <Link href="/admin/shop-components" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
+          <div className="text-3xl mb-3">⚙️</div>
+          <h3 className="text-white font-bold text-lg mb-1">Shop Components</h3>
+          <p className="text-[#a1a1aa] text-sm">Manage individual components available for retail in the shop.</p>
+        </Link>
+
+        <Link href="/admin/orders" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
           <div className="text-3xl mb-3">🛒</div>
           <h3 className="text-white font-bold text-lg mb-1">View Orders</h3>
           <p className="text-[#a1a1aa] text-sm">See all orders and update their status.</p>
         </Link>
 
-        <Link
-          href="/admin/messages"
-          className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
-        >
+        <Link href="/admin/messages" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
           <div className="text-3xl mb-3">✉️</div>
           <h3 className="text-white font-bold text-lg mb-1">View Messages</h3>
           <p className="text-[#a1a1aa] text-sm">Read contact form submissions.</p>
         </Link>
 
-        <Link
-          href="/"
-          className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
-        >
+        <Link href="/" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
           <div className="text-3xl mb-3">🌐</div>
           <h3 className="text-white font-bold text-lg mb-1">View Site</h3>
           <p className="text-[#a1a1aa] text-sm">Go to the public-facing website.</p>
         </Link>
 
-        <Link
-  href="/admin/settings"
-  className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300"
->
-  <div className="text-3xl mb-3">⚙️</div>
-  <h3 className="text-white font-bold text-lg mb-1">Site Settings</h3>
-  <p className="text-[#a1a1aa] text-sm">Update contact info, social links, and business hours.</p>
-</Link>
+        <Link href="/admin/settings" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
+          <div className="text-3xl mb-3">⚙️</div>
+          <h3 className="text-white font-bold text-lg mb-1">Site Settings</h3>
+          <p className="text-[#a1a1aa] text-sm">Update contact info, social links, and business hours.</p>
+        </Link>
       </div>
     </div>
   )
