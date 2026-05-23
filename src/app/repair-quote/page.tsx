@@ -1,27 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import type { ReactNode } from 'react'
+import { CheckCircle, Monitor, Smartphone, Zap, HardDrive, Settings, Wrench } from 'lucide-react'
 
 const steps = ['Device', 'Problem', 'Details', 'Submit']
 
-const devices = [
-  { id: 'desktop', label: 'Desktop PC', icon: '🖥️' },
-  { id: 'laptop', label: 'Laptop', icon: '💻' },
-  { id: 'mac', label: 'Mac / MacBook', icon: '🍎' },
-  { id: 'tablet', label: 'Tablet / iPad', icon: '📱' },
-  { id: 'other', label: 'Other', icon: '🔌' },
+const devices: { id: string; label: string; icon: ReactNode }[] = [
+  { id: 'desktop', label: 'Desktop PC', icon: <Monitor className="w-8 h-8" /> },
+  { id: 'laptop', label: 'Laptop', icon: <span className="text-3xl">💻</span> },
+  { id: 'mac', label: 'Mac / MacBook', icon: <span className="text-3xl">🍎</span> },
+  { id: 'tablet', label: 'Tablet / iPad', icon: <Smartphone className="w-8 h-8" /> },
+  { id: 'other', label: 'Other', icon: <span className="text-3xl">🔌</span> },
 ]
 
-const problems = [
-  { id: 'slow', label: 'Running Slow', icon: '🐢', description: 'PC takes long to boot or run programs' },
-  { id: 'virus', label: 'Virus / Malware', icon: '🦠', description: 'Pop-ups, strange behaviour, ransomware' },
-  { id: 'screen', label: 'Screen Issue', icon: '🖥️', description: 'Cracked, flickering, or no display' },
-  { id: 'nopower', label: "Won't Turn On", icon: '⚡', description: 'No power, not booting, black screen' },
-  { id: 'storage', label: 'Storage / Data', icon: '💾', description: 'Hard drive failure, data recovery' },
-  { id: 'os', label: 'OS / Software', icon: '⚙️', description: 'Windows issues, crashes, reinstall' },
-  { id: 'network', label: 'Network / WiFi', icon: '📶', description: 'No internet, slow connection, WiFi issues' },
-  { id: 'hardware', label: 'Hardware Upgrade', icon: '🔧', description: 'RAM, SSD, GPU upgrade' },
-  { id: 'other', label: 'Other', icon: '❓', description: 'Something else — describe it below' },
+const problems: { id: string; label: string; icon: ReactNode; description: string }[] = [
+  { id: 'slow', label: 'Running Slow', icon: <span className="text-2xl">🐢</span>, description: 'PC takes long to boot or run programs' },
+  { id: 'virus', label: 'Virus / Malware', icon: <span className="text-2xl">🦠</span>, description: 'Pop-ups, strange behaviour, ransomware' },
+  { id: 'screen', label: 'Screen Issue', icon: <Monitor className="w-6 h-6" />, description: 'Cracked, flickering, or no display' },
+  { id: 'nopower', label: "Won't Turn On", icon: <Zap className="w-6 h-6" />, description: 'No power, not booting, black screen' },
+  { id: 'storage', label: 'Storage / Data', icon: <HardDrive className="w-6 h-6" />, description: 'Hard drive failure, data recovery' },
+  { id: 'os', label: 'OS / Software', icon: <Settings className="w-6 h-6" />, description: 'Windows issues, crashes, reinstall' },
+  { id: 'network', label: 'Network / WiFi', icon: <span className="text-2xl">📶</span>, description: 'No internet, slow connection, WiFi issues' },
+  { id: 'hardware', label: 'Hardware Upgrade', icon: <Wrench className="w-6 h-6" />, description: 'RAM, SSD, GPU upgrade' },
+  { id: 'other', label: 'Other', icon: <span className="text-2xl">❓</span>, description: 'Something else — describe it below' },
 ]
 
 export default function RepairQuotePage() {
@@ -107,7 +109,7 @@ ${details.description}
                       : 'border-[#27272a] hover:border-[#3f3f46]'
                   }`}
                 >
-                  <div className="text-3xl mb-2">{d.icon}</div>
+                  <div className="mb-2 flex justify-center text-[#a1a1aa]">{d.icon}</div>
                   <div className="text-white text-sm font-medium text-center">{d.label}</div>
                 </button>
               ))}
@@ -130,7 +132,7 @@ ${details.description}
                       : 'border-[#27272a] hover:border-[#3f3f46]'
                   }`}
                 >
-                  <div className="text-2xl mb-2">{p.icon}</div>
+                  <div className="mb-2 text-[#a1a1aa]">{p.icon}</div>
                   <div className="text-white font-semibold text-sm mb-1">{p.label}</div>
                   <div className="text-[#a1a1aa] text-xs">{p.description}</div>
                 </button>
@@ -217,7 +219,7 @@ ${details.description}
 
             {submitStatus === 'success' ? (
               <div className="text-center py-8">
-                <div className="text-5xl mb-4">✅</div>
+                <CheckCircle className="w-16 h-16 text-green-400 mb-4 mx-auto" />
                 <h3 className="text-white font-bold text-xl mb-2">Repair Request Sent!</h3>
                 <p className="text-[#a1a1aa]">We'll get back to you within a few hours to arrange the repair.</p>
               </div>

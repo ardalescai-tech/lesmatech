@@ -3,36 +3,40 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import {
+  Wallet, Zap, Flame, Crown, Cpu, Monitor, Gamepad2, Package,
+  HardDrive, Wind, Server, Fan, CheckCircle, AlertTriangle,
+  ShoppingCart, Trophy, ThumbsUp
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 const budgetTiers = [
-  { id: 'budget', label: 'Budget Build', range: 'Up to £500', limit: 500, description: 'Great for everyday tasks, office work, and light gaming.', icon: '💰' },
-  { id: 'mid', label: 'Mid-Range Build', range: '£500 – £1000', limit: 1000, description: 'Perfect for 1080p gaming, content creation, and multitasking.', icon: '⚡' },
-  { id: 'high', label: 'High-End Build', range: '£1000 – £2000', limit: 2000, description: 'Serious performance for 1440p gaming and heavy workloads.', icon: '🔥' },
-  { id: 'no_limit', label: 'No Limit', range: '£2000+', limit: Infinity, description: 'The best of the best. Maximum performance, no compromises.', icon: '👑' },
+  { id: 'budget', label: 'Budget Build', range: 'Up to £500', limit: 500, description: 'Great for everyday tasks, office work, and light gaming.', Icon: Wallet },
+  { id: 'mid', label: 'Mid-Range Build', range: '£500 – £1000', limit: 1000, description: 'Perfect for 1080p gaming, content creation, and multitasking.', Icon: Zap },
+  { id: 'high', label: 'High-End Build', range: '£1000 – £2000', limit: 2000, description: 'Serious performance for 1440p gaming and heavy workloads.', Icon: Flame },
+  { id: 'no_limit', label: 'No Limit', range: '£2000+', limit: Infinity, description: 'The best of the best. Maximum performance, no compromises.', Icon: Crown },
 ]
 
 const steps = ['Budget', 'CPU', 'Motherboard', 'GPU', 'RAM', 'Storage', 'Cooler', 'Case', 'Fans', 'PSU', 'Review']
 const componentSteps = ['CPU', 'Motherboard', 'GPU', 'RAM', 'Storage', 'Cooler', 'Case', 'Fans', 'PSU']
 const hasBrands = (category: string) => ['CPU', 'GPU', 'Motherboard', 'Cooler'].includes(category)
 
-const stepIcons: Record<string, string> = {
-  Budget: '💰',
-  CPU: '🔲',
-  Motherboard: '🖥️',
-  GPU: '🎮',
-  RAM: '📦',
-  Storage: '💾',
-  Cooler: '❄️',
-  Case: '🗄️',
-  Fans: '🌀',
-  PSU: '⚡',
-  Review: '✅',
+const stepIcons: Record<string, LucideIcon> = {
+  Budget: Wallet,
+  CPU: Cpu,
+  Motherboard: Monitor,
+  GPU: Gamepad2,
+  RAM: Package,
+  Storage: HardDrive,
+  Cooler: Wind,
+  Case: Server,
+  Fans: Fan,
+  PSU: Zap,
+  Review: CheckCircle,
 }
 
-// Feedback inteligent per componenta
 const getComponentFeedback = (category: string, component: any, selected: Record<string, any>): { type: 'great' | 'good' | 'warning' | null, message: string } => {
   const cpu = selected['CPU']
-  const gpu = selected['GPU']
 
   if (category === 'CPU') {
     if (component.price >= 400) return { type: 'great', message: 'Excellent choice! This CPU offers top-tier performance for gaming and workloads.' }
@@ -58,13 +62,12 @@ const getComponentFeedback = (category: string, component: any, selected: Record
   }
 
   if (category === 'Storage') {
-    if (component.name?.includes('4TB') || component.name?.includes('2TB')) return { type: 'great', message: 'Plenty of storage! You won\'t run out of space anytime soon.' }
+    if (component.name?.includes('4TB') || component.name?.includes('2TB')) return { type: 'great', message: "Plenty of storage! You won't run out of space anytime soon." }
     if (component.name?.includes('NVMe') || component.name?.includes('SSD')) return { type: 'good', message: 'Fast NVMe storage — great boot and load times.' }
     return { type: 'warning', message: 'Consider an NVMe SSD for significantly faster performance.' }
   }
 
   if (category === 'PSU') {
-    const totalWatts = (cpu?.price || 0) + (gpu?.price || 0)
     if (component.name?.includes('1000W') || component.name?.includes('850W')) return { type: 'great', message: 'Plenty of headroom for your build. Future upgrades covered too.' }
     if (component.name?.includes('650W') || component.name?.includes('750W')) return { type: 'good', message: 'Solid wattage for most builds. Should handle your components well.' }
     return { type: 'warning', message: 'Make sure this PSU has enough wattage for your CPU + GPU combination.' }
@@ -125,7 +128,7 @@ export default function BuilderPage() {
   const isOverBudget = budgetLimit !== Infinity && total > budgetLimit
   const budgetPercent = budgetLimit !== Infinity ? Math.min((total / budgetLimit) * 100, 100) : 0
   const remaining = budgetLimit !== Infinity ? budgetLimit - total : 0
-  const isWarning = !isOverBudget && budgetPercent >= 80
+  const isWarningBudget = !isOverBudget && budgetPercent >= 80
 
   useEffect(() => {
     const fetchComponents = async () => {
@@ -157,9 +160,7 @@ export default function BuilderPage() {
 
   const getFilteredComponents = (category: string, brand?: string) => {
     const items = components[category] || []
-    const filtered = brand && brand !== 'Any'
-      ? items.filter((i) => i.brand === brand)
-      : items
+    const filtered = brand && brand !== 'Any' ? items.filter((i) => i.brand === brand) : items
     if (!budget) return filtered
     return filtered.filter((i) => i.budget_tiers?.includes(budget))
   }
@@ -188,26 +189,15 @@ export default function BuilderPage() {
         .insert({ budget, components: selected, total })
         .select()
         .single()
-
       if (sharedBuild) setSharedBuildId(sharedBuild.id)
-
       const res = await fetch('/api/builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: customerInfo.name,
-          email: customerInfo.email,
-          phone: customerInfo.phone,
-          budget,
-          components: selected,
-          total,
-        }),
+        body: JSON.stringify({ name: customerInfo.name, email: customerInfo.email, phone: customerInfo.phone, budget, components: selected, total }),
       })
       if (res.ok) setSubmitStatus('success')
       else setSubmitStatus('error')
-    } catch {
-      setSubmitStatus('error')
-    }
+    } catch { setSubmitStatus('error') }
   }
 
   const handleCopyLink = async () => {
@@ -223,14 +213,13 @@ export default function BuilderPage() {
     window.open(`https://wa.me/?text=Check out my custom PC build on LesmaTech! ${encodeURIComponent(url)}`, '_blank')
   }
 
-  // Warning Modal
   if (showWarning) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="relative max-w-lg w-full bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-8 text-center overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(37,99,235,0.15),transparent)]" />
           <div className="relative">
-            <div className="text-5xl mb-4">⚠️</div>
+            <AlertTriangle className="w-12 h-12 text-yellow-400 mb-4 mx-auto" />
             <h2 className="text-white font-bold text-2xl mb-3">Hold on a second!</h2>
             <p className="text-[#a1a1aa] mb-4 leading-relaxed">
               The <span className="text-white font-semibold">PC Builder</span> is designed for users who are comfortable selecting individual components like CPU, GPU, RAM, and motherboard.
@@ -239,16 +228,10 @@ export default function BuilderPage() {
               If you're not sure where to start, we recommend checking out our <span className="text-[#3b82f6] font-semibold">pre-built PCs</span> — hand-built machines for every budget, ready to ship.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/shop"
-                className="flex-1 bg-[#0d0d1a] border border-[#1e1e3a] hover:border-[#2563eb]/50 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 text-sm"
-              >
-                🛒 Browse Pre-Built PCs
+              <Link href="/shop" className="flex-1 bg-[#0d0d1a] border border-[#1e1e3a] hover:border-[#2563eb]/50 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 text-sm flex items-center justify-center gap-2">
+                <ShoppingCart className="w-4 h-4" /> Browse Pre-Built PCs
               </Link>
-              <button
-                onClick={() => setShowWarning(false)}
-                className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-6 py-3 rounded-xl transition-colors duration-200 text-sm"
-              >
+              <button onClick={() => setShowWarning(false)} className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-6 py-3 rounded-xl transition-colors duration-200 text-sm">
                 I Know What I'm Doing →
               </button>
             </div>
@@ -261,7 +244,7 @@ export default function BuilderPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="relative py-12 text-center overflow-hidden">
+      <div className="relative py-10 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(37,99,235,0.15),transparent)]" />
         <div className="relative">
           <div className="inline-flex items-center gap-2 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-full px-4 py-1.5 mb-4">
@@ -272,33 +255,82 @@ export default function BuilderPage() {
         </div>
       </div>
 
+      {/* Progress bar buget */}
+      {budget && total > 0 && (
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+    <div className={`border rounded-xl px-5 py-4 transition-all duration-300 ${
+      isOverBudget ? 'bg-red-500/10 border-red-500/30' :
+      isWarningBudget ? 'bg-yellow-400/10 border-yellow-400/30' :
+      'bg-green-500/10 border-green-500/30'
+    }`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[#a1a1aa] text-sm">Current total</span>
+        <span className="text-white font-bold text-xl">£{total}</span>
+      </div>
+      {budgetLimit !== Infinity && (
+        <>
+          <div className="w-full bg-[#1e1e3a] rounded-full h-2 mb-2 overflow-hidden">
+            <div
+              className={`h-2 rounded-full transition-all duration-500 ${
+                isOverBudget ? 'bg-red-500' : isWarningBudget ? 'bg-yellow-400' : 'bg-green-500'
+              }`}
+              style={{ width: `${budgetPercent}%` }}
+            />
+          </div>
+          <p className={`text-xs font-medium ${
+            isOverBudget ? 'text-red-400' : isWarningBudget ? 'text-yellow-400' : 'text-green-400'
+          }`}>
+            {isOverBudget
+              ? `Over budget by £${Math.abs(remaining).toFixed(0)}!`
+              : isWarningBudget
+              ? `Almost at limit — £${remaining.toFixed(0)} remaining.`
+              : `£${remaining.toFixed(0)} remaining within budget.`}
+          </p>
+        </>
+      )}
+      {budgetLimit === Infinity && <p className="text-[#a1a1aa] text-xs">No budget limit — build freely.</p>}
+    </div>
+  </div>
+)}
+
+      {/* Steps tabs orizontale */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+        <div className="overflow-x-auto">
+          <div className="flex gap-1 p-1 bg-[#080818] border border-[#1e1e3a] rounded-2xl w-fit min-w-full">
+            {steps.map((s, i) => {
+              const StepIcon = stepIcons[s]
+              const isDone = i < step
+              const isActive = i === step
+              return (
+                <button
+                  key={s}
+                  onClick={() => i < step && setStep(i)}
+                  className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl transition-all duration-200 flex-1 min-w-[60px] ${
+                    isActive ? 'bg-[#2563eb] text-white shadow-lg shadow-blue-500/20' :
+                    isDone ? 'bg-green-500/10 text-green-400 cursor-pointer hover:bg-green-500/20' :
+                    'text-[#3f3f46] cursor-default'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    isDone ? 'bg-green-500 text-white' :
+                    isActive ? 'bg-white/20 text-white' :
+                    'bg-[#1e1e3a] text-[#3f3f46]'
+                  }`}>
+                    {isDone
+                      ? <CheckCircle className="w-3.5 h-3.5" />
+                      : <StepIcon className="w-3.5 h-3.5" />
+                    }
+                  </div>
+                  <span className="text-[10px] font-medium hidden sm:block">{s}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="flex gap-8 items-start">
-
-          {/* LEFT — Steps Sidebar */}
-          <div className="hidden lg:flex flex-col gap-1 w-52 sticky top-24">
-            {steps.map((s, i) => (
-              <div
-                key={s}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                  i === step ? 'bg-[#2563eb]/15 border border-[#2563eb]/30' :
-                  i < step ? 'opacity-70' : 'opacity-30'
-                }`}
-              >
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                  i < step ? 'bg-green-500 text-white' :
-                  i === step ? 'bg-[#2563eb] text-white' :
-                  'bg-[#1e1e3a] text-[#a1a1aa]'
-                }`}>
-                  {i < step ? '✓' : stepIcons[s]}
-                </div>
-                <div>
-                  <div className={`text-xs font-semibold ${i === step ? 'text-white' : 'text-[#a1a1aa]'}`}>{s}</div>
-                  {selected[s] && <div className="text-[10px] text-[#3b82f6] truncate w-32">{selected[s].name}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
 
           {/* MAIN — Content */}
           <div className="flex-1 min-w-0">
@@ -310,9 +342,12 @@ export default function BuilderPage() {
                 lastFeedback.type === 'good' ? 'bg-blue-500/10 border-blue-500/30' :
                 'bg-yellow-500/10 border-yellow-500/30'
               }`}>
-                <span className="text-lg flex-shrink-0">
-                  {lastFeedback.type === 'great' ? '🏆' : lastFeedback.type === 'good' ? '👍' : '⚠️'}
-                </span>
+                {lastFeedback.type === 'great'
+                  ? <Trophy className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  : lastFeedback.type === 'good'
+                  ? <ThumbsUp className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  : <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                }
                 <div>
                   <div className={`text-sm font-semibold ${
                     lastFeedback.type === 'great' ? 'text-green-400' :
@@ -323,42 +358,6 @@ export default function BuilderPage() {
                   </div>
                   <div className="text-[#a1a1aa] text-xs mt-0.5">{lastFeedback.message}</div>
                 </div>
-              </div>
-            )}
-
-            {/* Budget progress bar */}
-            {budget && total > 0 && (
-              <div className={`border rounded-xl px-5 py-4 mb-6 transition-all duration-300 ${
-                isOverBudget ? 'bg-red-500/10 border-red-500/30' :
-                isWarning ? 'bg-yellow-400/10 border-yellow-400/30' :
-                'bg-green-500/10 border-green-500/30'
-              }`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[#a1a1aa] text-sm">Current total</span>
-                  <span className="text-white font-bold text-xl">£{total}</span>
-                </div>
-                {budgetLimit !== Infinity && (
-                  <>
-                    <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 mb-2 overflow-hidden">
-                      <div
-                        className={`h-1.5 rounded-full transition-all duration-500 ${
-                          isOverBudget ? 'bg-red-500' : isWarning ? 'bg-yellow-400' : 'bg-green-500'
-                        }`}
-                        style={{ width: `${budgetPercent}%` }}
-                      />
-                    </div>
-                    <p className={`text-xs font-medium ${
-                      isOverBudget ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'
-                    }`}>
-                      {isOverBudget
-                        ? `Over budget by £${Math.abs(remaining).toFixed(0)}!`
-                        : isWarning
-                        ? `Almost at limit — £${remaining.toFixed(0)} remaining.`
-                        : `£${remaining.toFixed(0)} remaining within budget.`}
-                    </p>
-                  </>
-                )}
-                {budgetLimit === Infinity && <p className="text-[#a1a1aa] text-xs">No budget limit — build freely.</p>}
               </div>
             )}
 
@@ -380,7 +379,7 @@ export default function BuilderPage() {
                             : 'border-[#1e1e3a] hover:border-[#2563eb]/40 bg-[#080818]'
                         }`}
                       >
-                        <div className="text-2xl mb-2">{tier.icon}</div>
+                        <tier.Icon className="w-6 h-6 mb-2 text-[#3b82f6]" />
                         <div className="text-white font-bold mb-1">{tier.label}</div>
                         <div className="text-[#2563eb] text-sm font-medium mb-2">{tier.range}</div>
                         <div className="text-[#a1a1aa] text-sm">{tier.description}</div>
@@ -392,8 +391,11 @@ export default function BuilderPage() {
 
               {componentSteps.includes(currentStep) && (
                 <div>
-                  <h2 className="text-white font-bold text-2xl mb-1">Choose Your {currentStep}</h2>
-                  <p className="text-[#a1a1aa] text-sm mb-6">
+                  <div className="flex items-center gap-3 mb-1">
+                    {(() => { const StepIcon = stepIcons[currentStep]; return <StepIcon className="w-6 h-6 text-[#3b82f6]" /> })()}
+                    <h2 className="text-white font-bold text-2xl">Choose Your {currentStep}</h2>
+                  </div>
+                  <p className="text-[#a1a1aa] text-sm mb-6 ml-9">
                     {selected[currentStep]
                       ? <span className="text-green-400">✓ Selected: {selected[currentStep].name}</span>
                       : 'Pick the best option for your build.'}
@@ -449,7 +451,11 @@ export default function BuilderPage() {
                           <div className="flex-1">
                             <div className="text-white font-medium">{component.name}</div>
                             <div className="text-[#a1a1aa] text-sm mt-0.5">{component.specs}</div>
-                            {compatError && <div className="text-red-400 text-xs mt-1">⚠️ {compatError}</div>}
+                            {compatError && (
+                              <div className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3 flex-shrink-0" />{compatError}
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 ml-4">
                             <div className="text-white font-bold text-lg">£{component.price}</div>
@@ -485,7 +491,7 @@ export default function BuilderPage() {
                       selected[cat] && (
                         <div key={cat} className="flex items-center justify-between p-3 bg-[#080818] rounded-lg border border-[#1e1e3a]">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{stepIcons[cat]}</span>
+                            {(() => { const StepIcon = stepIcons[cat]; return <StepIcon className="w-4 h-4 text-[#a1a1aa]" /> })()}
                             <span className="text-[#a1a1aa] text-sm">{cat}</span>
                           </div>
                           <div className="text-right">
@@ -503,52 +509,26 @@ export default function BuilderPage() {
 
                   <div className="flex flex-col gap-3 mb-6">
                     <h3 className="text-white font-semibold">Your Details</h3>
-                    <input
-                      type="text"
-                      placeholder="Full Name *"
-                      value={customerInfo.name}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email *"
-                      value={customerInfo.email}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Phone / WhatsApp"
-                      value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-                    />
+                    <input type="text" placeholder="Full Name *" value={customerInfo.name} onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })} className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors" />
+                    <input type="email" placeholder="Email *" value={customerInfo.email} onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })} className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors" />
+                    <input type="tel" placeholder="Phone / WhatsApp" value={customerInfo.phone} onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })} className="w-full bg-[#080818] border border-[#1e1e3a] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors" />
                   </div>
 
-                  <p className="text-[#a1a1aa] text-sm mb-6">
-                    * Final price includes labour, cable management, OS installation, and stress testing. We'll confirm the exact price via WhatsApp.
-                  </p>
+                  <p className="text-[#a1a1aa] text-sm mb-6">* Final price includes labour, cable management, OS installation, and stress testing. We'll confirm the exact price via WhatsApp.</p>
 
                   {submitStatus === 'success' ? (
                     <div className="text-center py-6">
-                      <div className="text-5xl mb-4">✅</div>
+                      <CheckCircle className="w-16 h-16 text-green-400 mb-4 mx-auto" />
                       <h3 className="text-white font-bold text-xl mb-2">Build Submitted!</h3>
                       <p className="text-[#a1a1aa] mb-6">We'll contact you within 24 hours to confirm your build.</p>
                       {sharedBuildId && (
                         <div className="flex flex-col gap-3">
                           <p className="text-[#a1a1aa] text-sm">Share your build:</p>
                           <div className="flex gap-3">
-                            <button
-                              onClick={handleCopyLink}
-                              className="flex-1 border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
-                            >
+                            <button onClick={handleCopyLink} className="flex-1 border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm">
                               {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
                             </button>
-                            <button
-                              onClick={handleWhatsAppShare}
-                              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm"
-                            >
+                            <button onClick={handleWhatsAppShare} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-xl transition-colors text-sm">
                               Share on WhatsApp
                             </button>
                           </div>
@@ -565,9 +545,7 @@ export default function BuilderPage() {
                     </button>
                   )}
 
-                  {submitStatus === 'error' && (
-                    <p className="text-red-400 text-sm mt-3 text-center">Something went wrong. Please try again.</p>
-                  )}
+                  {submitStatus === 'error' && <p className="text-red-400 text-sm mt-3 text-center">Something went wrong. Please try again.</p>}
                 </div>
               )}
             </div>
@@ -575,11 +553,7 @@ export default function BuilderPage() {
             {/* Navigation */}
             {currentStep !== 'Review' && (
               <div className="flex items-center justify-between">
-                <button
-                  onClick={handleBack}
-                  disabled={step === 0}
-                  className="border border-[#1e1e3a] text-[#a1a1aa] hover:text-white disabled:opacity-30 px-6 py-3 rounded-xl transition-colors text-sm font-medium"
-                >
+                <button onClick={handleBack} disabled={step === 0} className="border border-[#1e1e3a] text-[#a1a1aa] hover:text-white disabled:opacity-30 px-6 py-3 rounded-xl transition-colors text-sm font-medium">
                   ← Back
                 </button>
                 <button
@@ -601,25 +575,28 @@ export default function BuilderPage() {
             )}
           </div>
 
-          {/* RIGHT — Build Summary Sidebar */}
+          {/* RIGHT — Build Summary */}
           <div className="hidden xl:flex flex-col w-64 sticky top-24">
             <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-5">
               <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                <span>🖥️</span> Your Build
+                <Monitor className="w-4 h-4 text-[#a1a1aa]" /> Your Build
               </h3>
               <div className="flex flex-col gap-2 mb-4">
-                {steps.filter(s => s !== 'Budget' && s !== 'Review').map((s) => (
-                  <div key={s} className="flex items-center gap-2 py-1.5 border-b border-[#1e1e3a] last:border-0">
-                    <span className="text-sm w-5">{stepIcons[s]}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[#a1a1aa] text-[10px] uppercase tracking-wide">{s}</div>
-                      {selected[s]
-                        ? <div className="text-white text-xs truncate font-medium">{selected[s].name}</div>
-                        : <div className="text-[#3f3f46] text-xs">Not selected</div>}
+                {steps.filter(s => s !== 'Budget' && s !== 'Review').map((s) => {
+                  const StepIcon = stepIcons[s]
+                  return (
+                    <div key={s} className="flex items-center gap-2 py-1.5 border-b border-[#1e1e3a] last:border-0">
+                      <StepIcon className="w-4 h-4 text-[#a1a1aa] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[#a1a1aa] text-[10px] uppercase tracking-wide">{s}</div>
+                        {selected[s]
+                          ? <div className="text-white text-xs truncate font-medium">{selected[s].name}</div>
+                          : <div className="text-[#3f3f46] text-xs">Not selected</div>}
+                      </div>
+                      {selected[s] && <div className="text-[#2563eb] text-xs font-medium flex-shrink-0">£{selected[s].price}</div>}
                     </div>
-                    {selected[s] && <div className="text-[#2563eb] text-xs font-medium flex-shrink-0">£{selected[s].price}</div>}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
               <div className="bg-[#080818] rounded-xl p-3 border border-[#1e1e3a]">
                 <div className="text-[#a1a1aa] text-xs mb-1">Total so far</div>

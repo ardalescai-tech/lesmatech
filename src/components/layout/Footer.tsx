@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getSettings } from '@/lib/settings'
+import { Phone } from 'lucide-react'
 
 export default async function Footer() {
   const settings = await getSettings()
@@ -29,7 +30,7 @@ export default async function Footer() {
             )}
             {settings.phone && (
               <p className="text-[#a1a1aa] text-sm mt-1">
-                📞 {settings.phone}
+                <Phone className="inline w-4 h-4 mr-1" />{settings.phone}
               </p>
             )}
             {settings.hours && (

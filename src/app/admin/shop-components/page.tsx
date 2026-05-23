@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { Settings } from 'lucide-react'
 
 const categories = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooler', 'Fans', 'Other']
 const brands = ['AMD', 'Intel', 'Nvidia', 'Samsung', 'WD', 'Seagate', 'Corsair', 'G.Skill', 'NZXT', 'Lian Li', 'Fractal', 'be quiet!', 'Seasonic', 'Asus', 'MSI', 'Gigabyte', 'Other']
@@ -246,7 +247,7 @@ export default function AdminShopComponentsPage() {
       <div className="bg-[#111111] border border-[#27272a] rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-4xl mb-3">⚙️</div>
+            <Settings className="w-10 h-10 text-[#a1a1aa] mb-3 mx-auto" />
             <p className="text-white font-semibold mb-1">No components yet</p>
             <p className="text-[#a1a1aa] text-sm">Add your first component above.</p>
           </div>

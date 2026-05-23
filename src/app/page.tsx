@@ -1,31 +1,33 @@
 'use client'
 
 import Link from 'next/link'
+import { Monitor, Globe, Wrench, Cloud } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
-const services = [
+const services: { Icon: LucideIcon; title: string; description: string; href: string; cta: string }[] = [
   {
-    icon: '🖥️',
+    Icon: Monitor,
     title: 'Custom PC Builds',
     description: 'We build your dream PC to your exact budget and requirements. Every component hand-picked for maximum performance.',
     href: '/builder',
     cta: 'Start Building',
   },
   {
-    icon: '🌐',
+    Icon: Globe,
     title: 'Web Development',
     description: 'Professional websites and web apps for your business. From simple landing pages to complex e-commerce platforms.',
     href: '/services',
     cta: 'Learn More',
   },
   {
-    icon: '🔧',
+    Icon: Wrench,
     title: 'Computer Repair',
     description: 'Hardware or software issues? We diagnose and fix any problem fast, so you can get back to work.',
     href: '/services',
     cta: 'Book Repair',
   },
   {
-    icon: '☁️',
+    Icon: Cloud,
     title: 'Hosting & Maintenance',
     description: 'Reliable hosting and ongoing maintenance for your website. We keep your site fast, secure, and always online.',
     href: '/services',
@@ -169,8 +171,8 @@ export default function HomePage() {
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 30px rgba(37,99,235,0.08)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
               >
-                <div className="w-12 h-12 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-xl flex items-center justify-center text-2xl mb-4">
-                  {service.icon}
+                <div className="w-12 h-12 bg-[#2563eb]/10 border border-[#2563eb]/20 rounded-xl flex items-center justify-center mb-4">
+                  <service.Icon className="w-6 h-6 text-[#3b82f6]" />
                 </div>
                 <h3 className="text-white font-semibold text-lg mb-2">{service.title}</h3>
                 <p className="text-[#a1a1aa] text-sm leading-relaxed mb-6">{service.description}</p>

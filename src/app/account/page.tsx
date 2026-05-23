@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Package } from 'lucide-react'
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-400/10 text-yellow-400',
@@ -83,7 +84,7 @@ export default function AccountPage() {
 
       {orders.length === 0 ? (
         <div className="bg-[#111111] border border-[#27272a] rounded-xl p-12 text-center">
-          <div className="text-4xl mb-4">📦</div>
+          <Package className="w-10 h-10 text-[#a1a1aa] mb-4 mx-auto" />
           <h3 className="text-white font-semibold mb-2">No orders yet</h3>
           <p className="text-[#a1a1aa] text-sm mb-6">When you place an order, it will appear here.</p>
           <Link

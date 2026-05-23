@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { Package } from 'lucide-react'
 
 const statusSteps = [
   { key: 'pending', label: 'Order Received' },
@@ -69,7 +70,7 @@ export default function TrackOrderPage() {
 
       {searched && orders.length === 0 && (
         <div className="text-center py-12 bg-[#111111] border border-[#27272a] rounded-xl">
-          <div className="text-4xl mb-3">📦</div>
+          <Package className="w-10 h-10 text-[#a1a1aa] mb-3 mx-auto" />
           <h3 className="text-white font-semibold mb-2">No orders found</h3>
           <p className="text-[#a1a1aa] text-sm">No orders found for this email address.</p>
         </div>

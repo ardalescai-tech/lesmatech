@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Product } from '@/lib/types'
+import { Package } from 'lucide-react'
 
 const categories = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling', 'Other']
 
@@ -199,7 +200,7 @@ export default function AdminProductsPage() {
       <div className="bg-[#111111] border border-[#27272a] rounded-xl overflow-hidden">
         {products.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-4xl mb-3">📦</div>
+            <Package className="w-10 h-10 text-[#a1a1aa] mb-3 mx-auto" />
             <p className="text-white font-semibold">No products yet</p>
             <p className="text-[#a1a1aa] text-sm mt-1">Click "Add Product" to get started.</p>
           </div>

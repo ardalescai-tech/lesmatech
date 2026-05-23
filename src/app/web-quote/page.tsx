@@ -1,18 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import type { ReactNode } from 'react'
+import { CheckCircle, Wrench } from 'lucide-react'
 
 const steps = ['Business Type', 'Package', 'Add-ons', 'Details', 'Submit']
 
-const businessTypes = [
-  { id: 'restaurant', label: 'Restaurant / Café', icon: '🍽️', description: 'Menu, reservations, location, hours' },
-  { id: 'retail', label: 'Retail / Shop', icon: '🛍️', description: 'Products, online store, payments' },
-  { id: 'service', label: 'Service Business', icon: '🔧', description: 'Plumber, electrician, cleaner, etc.' },
-  { id: 'portfolio', label: 'Portfolio / Freelancer', icon: '🎨', description: 'Showcase your work and skills' },
-  { id: 'startup', label: 'Startup / SaaS', icon: '🚀', description: 'Landing page, waitlist, product info' },
-  { id: 'healthcare', label: 'Healthcare / Beauty', icon: '💆', description: 'Appointments, services, team' },
-  { id: 'education', label: 'Education / Coaching', icon: '📚', description: 'Courses, booking, resources' },
-  { id: 'other', label: 'Other', icon: '💼', description: 'Something else — we\'ll figure it out' },
+const businessTypes: { id: string; label: string; icon: ReactNode; description: string }[] = [
+  { id: 'restaurant', label: 'Restaurant / Café', icon: <span className="text-2xl">🍽️</span>, description: 'Menu, reservations, location, hours' },
+  { id: 'retail', label: 'Retail / Shop', icon: <span className="text-2xl">🛍️</span>, description: 'Products, online store, payments' },
+  { id: 'service', label: 'Service Business', icon: <Wrench className="w-6 h-6" />, description: 'Plumber, electrician, cleaner, etc.' },
+  { id: 'portfolio', label: 'Portfolio / Freelancer', icon: <span className="text-2xl">🎨</span>, description: 'Showcase your work and skills' },
+  { id: 'startup', label: 'Startup / SaaS', icon: <span className="text-2xl">🚀</span>, description: 'Landing page, waitlist, product info' },
+  { id: 'healthcare', label: 'Healthcare / Beauty', icon: <span className="text-2xl">💆</span>, description: 'Appointments, services, team' },
+  { id: 'education', label: 'Education / Coaching', icon: <span className="text-2xl">📚</span>, description: 'Courses, booking, resources' },
+  { id: 'other', label: 'Other', icon: <span className="text-2xl">💼</span>, description: 'Something else — we\'ll figure it out' },
 ]
 
 const packages = [
@@ -152,7 +154,7 @@ ${details.description}
                       : 'border-[#27272a] hover:border-[#3f3f46]'
                   }`}
                 >
-                  <div className="text-2xl mb-2">{type.icon}</div>
+                  <div className="mb-2 text-[#a1a1aa]">{type.icon}</div>
                   <div className="text-white font-semibold text-sm mb-1">{type.label}</div>
                   <div className="text-[#a1a1aa] text-xs">{type.description}</div>
                 </button>
@@ -317,7 +319,7 @@ ${details.description}
 
             {submitStatus === 'success' ? (
               <div className="text-center py-8">
-                <div className="text-5xl mb-4">✅</div>
+                <CheckCircle className="w-16 h-16 text-green-400 mb-4 mx-auto" />
                 <h3 className="text-white font-bold text-xl mb-2">Quote Request Sent!</h3>
                 <p className="text-[#a1a1aa]">We'll get back to you within 24 hours with a detailed quote.</p>
               </div>

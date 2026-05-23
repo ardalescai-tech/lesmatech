@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CheckCircle, Search, Smartphone, Wrench, Truck } from 'lucide-react'
 
 export default function CheckoutSuccessPage() {
   return (
@@ -10,7 +11,7 @@ export default function CheckoutSuccessPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-10 text-center mb-6">
           <div className="w-16 h-16 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">✅</span>
+            <CheckCircle className="w-8 h-8 text-green-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-3">Order Confirmed!</h1>
           <p className="text-[#a1a1aa] mb-2">
@@ -25,14 +26,14 @@ export default function CheckoutSuccessPage() {
           <h3 className="text-white font-semibold mb-4">What happens next?</h3>
           <div className="flex flex-col gap-4">
             {[
-              { step: '1', icon: '🔍', text: 'We review your order and source all components' },
-              { step: '2', icon: '📱', text: 'We contact you via WhatsApp to confirm details' },
-              { step: '3', icon: '🔧', text: 'We assemble and stress test your PC' },
-              { step: '4', icon: '🚚', text: 'We ship your order with a tracking number' },
+              { step: '1', Icon: Search, text: 'We review your order and source all components' },
+              { step: '2', Icon: Smartphone, text: 'We contact you via WhatsApp to confirm details' },
+              { step: '3', Icon: Wrench, text: 'We assemble and stress test your PC' },
+              { step: '4', Icon: Truck, text: 'We ship your order with a tracking number' },
             ].map((item) => (
               <div key={item.step} className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-[#2563eb]/10 border border-[#2563eb]/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">{item.icon}</span>
+                  <item.Icon className="w-5 h-5 text-[#3b82f6]" />
                 </div>
                 <span className="text-[#a1a1aa] text-sm">{item.text}</span>
               </div>

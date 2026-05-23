@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import { Monitor, ShoppingCart, Globe, Wrench, Cloud, Phone } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
-const services = [
+const services: { Icon: LucideIcon; title: string; description: string; features: string[]; cta: string; href: string }[] = [
   {
-    icon: '🖥️',
+    Icon: Monitor,
     title: 'Custom PC Builds',
     description: 'Tell us your budget and what you need the PC for — gaming, work, video editing, or anything else. We source the best components and build it for you, tested and ready to go.',
     features: [
@@ -16,7 +18,7 @@ const services = [
     href: '/builder',
   },
   {
-    icon: '🛒',
+    Icon: ShoppingCart,
     title: 'Pre-Built PCs',
     description: 'Browse our selection of ready-to-ship PCs. Each build is carefully put together for common use cases — gaming, office work, content creation, and more.',
     features: [
@@ -30,7 +32,7 @@ const services = [
     href: '/shop',
   },
   {
-    icon: '🌐',
+    Icon: Globe,
     title: 'Web Development',
     description: 'We design and build professional websites tailored to your business. From simple landing pages to full e-commerce platforms — transparent pricing, no hidden fees.',
     features: [
@@ -44,7 +46,7 @@ const services = [
     href: '/web-quote',
   },
   {
-    icon: '🔧',
+    Icon: Wrench,
     title: 'Computer Repair',
     description: 'Something not working? We diagnose and fix hardware and software issues quickly. No fix, no fee — we only charge when the problem is solved.',
     features: [
@@ -58,7 +60,7 @@ const services = [
     href: '/repair-quote',
   },
   {
-    icon: '☁️',
+    Icon: Cloud,
     title: 'Hosting & Maintenance',
     description: 'We host and maintain your website so you never have to worry about downtime, security, or updates. Monthly plans with no long-term contracts.',
     features: [
@@ -72,7 +74,7 @@ const services = [
     href: '/contact',
   },
   {
-    icon: '📞',
+    Icon: Phone,
     title: 'IT Consultation',
     description: 'Not sure what you need? We offer free consultations to help you figure out the best solution for your home or business setup.',
     features: [
@@ -109,7 +111,7 @@ export default function ServicesPage() {
             key={service.title}
             className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300 flex flex-col"
           >
-            <div className="text-3xl mb-4">{service.icon}</div>
+            <div className="mb-4"><service.Icon className="w-8 h-8 text-[#3b82f6]" /></div>
             <h3 className="text-white font-bold text-xl mb-2">{service.title}</h3>
             <p className="text-[#a1a1aa] text-sm leading-relaxed mb-5">{service.description}</p>
 

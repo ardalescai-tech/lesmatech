@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { CheckCircle } from 'lucide-react'
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -84,7 +85,7 @@ export default function ContactPage() {
         <div className="lg:col-span-2 bg-[#111111] border border-[#27272a] rounded-xl p-8">
           {status === 'success' ? (
             <div className="text-center py-12">
-              <div className="text-5xl mb-4">✅</div>
+              <CheckCircle className="w-12 h-12 text-green-400 mb-4 mx-auto" />
               <h3 className="text-white font-bold text-xl mb-2">Message Sent!</h3>
               <p className="text-[#a1a1aa]">We'll get back to you within 24 hours.</p>
             </div>

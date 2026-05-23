@@ -3,6 +3,7 @@
 import { useCart } from '@/lib/CartContext'
 import Link from 'next/link'
 import { useState } from 'react'
+import { ShoppingCart, Monitor, Shield, Truck, CheckCircle, Lock, RefreshCw, Phone } from 'lucide-react'
 
 const DELIVERY_THRESHOLD = 500
 const DELIVERY_COST = 10
@@ -59,7 +60,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="text-6xl mb-4">🛒</div>
+        <ShoppingCart className="w-16 h-16 text-[#a1a1aa] mb-4 mx-auto" />
         <h1 className="text-3xl font-bold text-white mb-4">Your cart is empty</h1>
         <p className="text-[#a1a1aa] mb-8">Add some PCs from the shop to get started.</p>
         <Link href="/shop" className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-8 py-3 rounded-lg transition-colors inline-block">
@@ -92,7 +93,7 @@ export default function CartPage() {
                   {item.image_url ? (
                     <img src={item.image_url} alt={item.name} className="w-full h-full object-cover rounded-xl" />
                   ) : (
-                    <span className="text-3xl">🖥️</span>
+                    <Monitor className="w-8 h-8 text-[#a1a1aa] m-auto" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -201,12 +202,12 @@ export default function CartPage() {
             {/* Trust badges */}
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { icon: '🛡️', title: '2 Year Warranty', sub: 'Parts & labour covered' },
-                { icon: '🚚', title: 'Fast Delivery', sub: 'Free on orders over £500' },
-                { icon: '✅', title: 'Stress Tested', sub: 'Every PC verified before shipping' },
+                { Icon: Shield, title: '2 Year Warranty', sub: 'Parts & labour covered' },
+                { Icon: Truck, title: 'Fast Delivery', sub: 'Free on orders over £500' },
+                { Icon: CheckCircle, title: 'Stress Tested', sub: 'Every PC verified before shipping' },
               ].map(item => (
                 <div key={item.title} className="flex items-center gap-3 bg-[#0d0d1a] border border-[#1e1e3a] rounded-xl p-4">
-                  <span className="text-xl">{item.icon}</span>
+                  <item.Icon className="w-5 h-5 text-[#3b82f6] flex-shrink-0" />
                   <div>
                     <div className="text-white text-sm font-semibold">{item.title}</div>
                     <div className="text-[#a1a1aa] text-xs">{item.sub}</div>
@@ -227,7 +228,7 @@ export default function CartPage() {
                     <div className="w-10 h-10 bg-[#080818] rounded-lg flex-shrink-0 overflow-hidden border border-[#1e1e3a]">
                       {item.image_url
                         ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                        : <span className="flex items-center justify-center h-full text-lg">🖥️</span>}
+                        : <Monitor className="w-5 h-5 text-[#a1a1aa] m-auto" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-white text-xs font-medium truncate">{item.name}</div>
@@ -286,7 +287,7 @@ export default function CartPage() {
                   disabled={loading || !formValid}
                   className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors duration-200 text-base shadow-lg shadow-blue-500/20"
                 >
-                  {loading ? 'Redirecting...' : '🔒 Proceed to Checkout'}
+                  {loading ? 'Redirecting...' : <><Lock className="inline w-4 h-4 mr-1" /> Proceed to Checkout</>}
                 </button>
               )}
 
@@ -327,15 +328,15 @@ export default function CartPage() {
             <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-5">
               <div className="flex flex-col gap-2.5">
                 {[
-                  { icon: '🛡️', text: '2 year warranty included' },
-                  { icon: '🚚', text: 'Free delivery on orders over £500' },
-                  { icon: '🔁', text: '14 day return policy' },
-                  { icon: '📞', text: 'Dedicated support via WhatsApp' },
-                  { icon: '🔒', text: '100% secure payment' },
-                  { icon: '✅', text: 'Tested & verified by LesmaTech' },
+                  { Icon: Shield, text: '2 year warranty included' },
+                  { Icon: Truck, text: 'Free delivery on orders over £500' },
+                  { Icon: RefreshCw, text: '14 day return policy' },
+                  { Icon: Phone, text: 'Dedicated support via WhatsApp' },
+                  { Icon: Lock, text: '100% secure payment' },
+                  { Icon: CheckCircle, text: 'Tested & verified by LesmaTech' },
                 ].map(item => (
                   <div key={item.text} className="flex items-center gap-2.5 text-sm">
-                    <span>{item.icon}</span>
+                    <item.Icon className="w-4 h-4 text-[#3b82f6] flex-shrink-0" />
                     <span className="text-[#a1a1aa]">{item.text}</span>
                   </div>
                 ))}

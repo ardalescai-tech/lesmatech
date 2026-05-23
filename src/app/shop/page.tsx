@@ -4,19 +4,21 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { useCart } from '@/lib/CartContext'
+import { Wallet, Zap, Flame, Crown, Cpu, Gamepad2, Package, HardDrive, Wind, Monitor, Settings, CheckCircle, Shield, Truck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 const categories = ['All', 'Gaming', 'Office', 'Workstation']
 const componentCategories = ['All', 'CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Cooler', 'Case', 'Fans']
 
 const budgetTiers = [
-  { id: 'budget', label: 'Budget', range: 'Under £700', max: 700, icon: '💰', color: 'from-green-500/20 to-green-500/5', border: 'border-green-500/30', glow: 'hover:border-green-500/60', textColor: 'text-green-400' },
-  { id: 'mid', label: 'Mid-Range', range: '£700 – £1,500', max: 1500, icon: '⚡', color: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/30', glow: 'hover:border-blue-500/60', textColor: 'text-blue-400' },
-  { id: 'high', label: 'High-End', range: '£1,500 – £2,500', max: 2500, icon: '🔥', color: 'from-orange-500/20 to-orange-500/5', border: 'border-orange-500/30', glow: 'hover:border-orange-500/60', textColor: 'text-orange-400' },
-  { id: 'no_limit', label: 'No Limit', range: '£2,500+', max: Infinity, icon: '👑', color: 'from-purple-500/20 to-purple-500/5', border: 'border-purple-500/30', glow: 'hover:border-purple-500/60', textColor: 'text-purple-400' },
+  { id: 'budget', label: 'Budget', range: 'Under £700', max: 700, Icon: Wallet, color: 'from-green-500/20 to-green-500/5', border: 'border-green-500/30', glow: 'hover:border-green-500/60', textColor: 'text-green-400' },
+  { id: 'mid', label: 'Mid-Range', range: '£700 – £1,500', max: 1500, Icon: Zap, color: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/30', glow: 'hover:border-blue-500/60', textColor: 'text-blue-400' },
+  { id: 'high', label: 'High-End', range: '£1,500 – £2,500', max: 2500, Icon: Flame, color: 'from-orange-500/20 to-orange-500/5', border: 'border-orange-500/30', glow: 'hover:border-orange-500/60', textColor: 'text-orange-400' },
+  { id: 'no_limit', label: 'No Limit', range: '£2,500+', max: Infinity, Icon: Crown, color: 'from-purple-500/20 to-purple-500/5', border: 'border-purple-500/30', glow: 'hover:border-purple-500/60', textColor: 'text-purple-400' },
 ]
 
-const specIcons: Record<string, string> = {
-  cpu: '🔲', gpu: '🎮', ram: '📦', storage: '💾', psu: '⚡', cooler: '❄️', motherboard: '🖥️',
+const specIcons: Record<string, LucideIcon> = {
+  cpu: Cpu, gpu: Gamepad2, ram: Package, storage: HardDrive, psu: Zap, cooler: Wind, motherboard: Monitor,
 }
 
 function PCCard({ pc, addItem }: { pc: any, addItem: any }) {
@@ -48,7 +50,7 @@ function PCCard({ pc, addItem }: { pc: any, addItem: any }) {
           {pc.image_url ? (
             <img src={pc.image_url} alt={pc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
           ) : (
-            <span className="text-6xl">🖥️</span>
+            <Monitor className="w-16 h-16 text-[#a1a1aa]" />
           )}
           <div className="absolute top-3 left-3 z-20">
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium backdrop-blur-sm ${
@@ -75,7 +77,7 @@ function PCCard({ pc, addItem }: { pc: any, addItem: any }) {
           <div className="grid grid-cols-2 gap-1.5 mb-4">
             {Object.entries(specsObj).slice(0, 6).map(([key, value]) => (
               <div key={key} className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5">
-                <span className="text-xs">{specIcons[key.toLowerCase()] || '⚙️'}</span>
+                {(() => { const SpecIcon = specIcons[key.toLowerCase()] || Settings; return <SpecIcon className="w-3 h-3 text-[#a1a1aa] flex-shrink-0" /> })()}
                 <div className="min-w-0">
                   <div className="text-[#3f3f46] text-[9px] uppercase tracking-wide leading-none mb-0.5">{key}</div>
                   <div className="text-white text-[11px] font-medium truncate">{value}</div>
@@ -150,7 +152,7 @@ function ComponentCard({ comp, addItem }: { comp: any, addItem: any }) {
         {comp.image_url ? (
           <img src={comp.image_url} alt={comp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         ) : (
-          <span className="text-5xl">{specIcons[comp.category.toLowerCase()] || '⚙️'}</span>
+          (() => { const SpecIcon = specIcons[comp.category.toLowerCase()] || Settings; return <SpecIcon className="w-12 h-12 text-[#a1a1aa]" /> })()
         )}
         <div className="absolute top-3 left-3 z-20">
           <span className="text-xs px-2.5 py-1 rounded-full font-medium backdrop-blur-sm bg-blue-500/30 text-blue-300 border border-blue-500/30">
@@ -253,12 +255,12 @@ export default function ShopPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8 text-sm">
             {[
-              { icon: '✅', title: 'Tested & Verified', sub: 'Every PC stress tested' },
-              { icon: '🛡️', title: '2 Year Warranty', sub: 'Parts & labor coverage' },
-              { icon: '🚚', title: 'Fast Delivery', sub: 'Secure & insured shipping' },
+              { Icon: CheckCircle, title: 'Tested & Verified', sub: 'Every PC stress tested' },
+              { Icon: Shield, title: '2 Year Warranty', sub: 'Parts & labor coverage' },
+              { Icon: Truck, title: 'Fast Delivery', sub: 'Secure & insured shipping' },
             ].map(item => (
               <div key={item.title} className="flex items-center gap-3">
-                <span className="text-xl">{item.icon}</span>
+                <item.Icon className="w-5 h-5 text-[#3b82f6]" />
                 <div className="text-left">
                   <div className="text-white font-semibold">{item.title}</div>
                   <div className="text-[#a1a1aa] text-xs">{item.sub}</div>
@@ -278,7 +280,7 @@ export default function ShopPage() {
               tab === 'pcs' ? 'bg-[#2563eb] text-white shadow-lg shadow-blue-500/20' : 'text-[#a1a1aa] hover:text-white'
             }`}
           >
-            🖥️ Pre-Built PCs
+            <Monitor className="inline w-4 h-4 mr-1.5" />Pre-Built PCs
           </button>
           <button
             onClick={() => setTab('components')}
@@ -286,7 +288,7 @@ export default function ShopPage() {
               tab === 'components' ? 'bg-[#2563eb] text-white shadow-lg shadow-blue-500/20' : 'text-[#a1a1aa] hover:text-white'
             }`}
           >
-            ⚙️ Components
+            <Settings className="inline w-4 h-4 mr-1.5" />Components
           </button>
         </div>
       </section>
@@ -307,7 +309,7 @@ export default function ShopPage() {
                     onClick={() => setActiveTier(activeTier === tier.id ? null : tier.id)}
                     className={`relative p-5 rounded-xl border bg-gradient-to-b ${tier.color} ${tier.border} ${tier.glow} transition-all duration-300 text-left ${activeTier === tier.id ? 'ring-2 ring-white/20 scale-[1.02]' : ''}`}
                   >
-                    <div className="text-2xl mb-2">{tier.icon}</div>
+                    <tier.Icon className={`w-6 h-6 mb-2 ${tier.textColor}`} />
                     <div className="text-white font-bold text-base">{tier.label}</div>
                     <div className={`text-xs font-medium mt-1 ${tier.textColor}`}>{tier.range}</div>
                     <div className="text-[#a1a1aa] text-xs mt-2">{count} PC{count !== 1 ? 's' : ''} available</div>
@@ -338,7 +340,7 @@ export default function ShopPage() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
             {filteredPCs.length === 0 ? (
               <div className="text-center py-20">
-                <div className="text-5xl mb-4">🖥️</div>
+                <Monitor className="w-12 h-12 text-[#a1a1aa] mb-4 mx-auto" />
                 <h3 className="text-white font-bold text-xl mb-2">No PCs found</h3>
                 <p className="text-[#a1a1aa]">Try a different budget or category filter.</p>
               </div>
@@ -381,7 +383,7 @@ export default function ShopPage() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
             {components.length === 0 ? (
               <div className="text-center py-20">
-                <div className="text-5xl mb-4">⚙️</div>
+                <Settings className="w-12 h-12 text-[#a1a1aa] mb-4 mx-auto" />
                 <h3 className="text-white font-bold text-xl mb-2">No components yet</h3>
                 <p className="text-[#a1a1aa]">Check back soon — we're stocking up!</p>
               </div>

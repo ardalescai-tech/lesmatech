@@ -1,25 +1,27 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { getSettings } from '@/lib/settings'
+import { Zap, Lock } from 'lucide-react'
+import type { ReactNode } from 'react'
 
-const values = [
+const values: { icon: ReactNode; title: string; description: string }[] = [
   {
-    icon: '🎯',
+    icon: <span className="text-3xl">🎯</span>,
     title: 'Honest Pricing',
     description: 'No hidden fees, no surprises. You always know exactly what you\'re paying for before we start.',
   },
   {
-    icon: '⚡',
+    icon: <Zap className="w-8 h-8 text-[#3b82f6]" />,
     title: 'Fast Turnaround',
     description: 'We respect your time. Most repairs done same day, websites delivered on schedule.',
   },
   {
-    icon: '🤝',
+    icon: <span className="text-3xl">🤝</span>,
     title: 'Personal Service',
     description: 'You deal with us directly — not a call centre. We build real relationships with our clients.',
   },
   {
-    icon: '🔒',
+    icon: <Lock className="w-8 h-8 text-[#3b82f6]" />,
     title: 'Quality Guaranteed',
     description: 'Every PC we build is stress tested. Every website we deliver is fully tested across devices.',
   },
@@ -65,7 +67,7 @@ export default async function AboutPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {values.map((value) => (
             <div key={value.title} className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
-              <div className="text-3xl mb-4">{value.icon}</div>
+              <div className="mb-4">{value.icon}</div>
               <h3 className="text-white font-semibold mb-2">{value.title}</h3>
               <p className="text-[#a1a1aa] text-sm leading-relaxed">{value.description}</p>
             </div>
