@@ -3,34 +3,73 @@
 import { useCart } from '@/lib/CartContext'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ShoppingCart, Monitor, Shield, Truck, CheckCircle, Lock, RefreshCw, Phone } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { ShoppingCart, Monitor, Shield, Truck, CheckCircle, Lock, RefreshCw, Phone, Tag, X } from 'lucide-react'
 
 const DELIVERY_THRESHOLD = 500
 const DELIVERY_COST = 10
+
+// Comision progresiv bazat pe valoarea comenzii
+const getDiscount = (orderTotal: number): number => {
+  if (orderTotal >= 1500) return 0.05
+  if (orderTotal >= 500) return 0.03
+  return 0.02
+}
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postcode: '',
-    notes: '',
+    fullName: '', email: '', phone: '', address: '', city: '', postcode: '', notes: '',
   })
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('')
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoError, setPromoError] = useState('')
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string, discountPercent: number } | null>(null)
 
   const deliveryFree = total >= DELIVERY_THRESHOLD
   const deliveryAmount = deliveryFree ? 0 : DELIVERY_COST
-  const grandTotal = total + deliveryAmount
+  const subtotalWithDelivery = total + deliveryAmount
+  const discountAmount = appliedPromo ? Math.round(subtotalWithDelivery * appliedPromo.discountPercent * 100) / 100 : 0
+  const grandTotal = subtotalWithDelivery - discountAmount
 
   const handleField = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
   const formValid = form.fullName && form.email && form.phone && form.address && form.city && form.postcode
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return
+    setPromoLoading(true)
+    setPromoError('')
+
+    const { data, error } = await supabase
+      .from('affiliate_applications')
+      .select('affiliate_code, status')
+      .eq('affiliate_code', promoCode.trim().toUpperCase())
+      .eq('status', 'approved')
+      .single()
+
+    if (error || !data) {
+      setPromoError('Invalid or inactive promo code.')
+      setPromoLoading(false)
+      return
+    }
+
+    const discountPercent = getDiscount(subtotalWithDelivery)
+    setAppliedPromo({ code: data.affiliate_code, discountPercent })
+    setPromoLoading(false)
+  }
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null)
+    setPromoCode('')
+    setPromoError('')
+  }
 
   const handleCheckout = async () => {
     setLoading(true)
@@ -45,6 +84,8 @@ export default function CartPage() {
             quantity: item.quantity,
           })),
           delivery: deliveryAmount,
+          discount: discountAmount,
+          promoCode: appliedPromo?.code,
           customerEmail: form.email,
           shippingDetails: form,
         }),
@@ -86,14 +127,13 @@ export default function CartPage() {
           {/* LEFT */}
           <div className="lg:col-span-2 flex flex-col gap-4">
 
-            {/* Items */}
             {items.map((item) => (
               <div key={item.id} className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-5 flex items-center gap-4 hover:border-[#2563eb]/30 transition-all duration-200">
                 <div className="w-20 h-20 bg-[#080818] rounded-xl flex items-center justify-center flex-shrink-0 border border-[#1e1e3a] overflow-hidden">
                   {item.image_url ? (
                     <img src={item.image_url} alt={item.name} className="w-full h-full object-cover rounded-xl" />
                   ) : (
-                    <Monitor className="w-8 h-8 text-[#a1a1aa] m-auto" />
+                    <Monitor className="w-8 h-8 text-[#a1a1aa]" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -120,80 +160,34 @@ export default function CartPage() {
               <div className="bg-[#0d0d1a] border border-[#1e1e3a] rounded-2xl p-6 mt-2">
                 <h2 className="text-white font-bold text-lg mb-1">Delivery Details</h2>
                 <p className="text-[#a1a1aa] text-sm mb-6">Fill in your shipping information below.</p>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Full Name *</label>
-                    <input
-                      name="fullName"
-                      value={form.fullName}
-                      onChange={handleField}
-                      placeholder="John Smith"
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]"
-                    />
+                    <input name="fullName" value={form.fullName} onChange={handleField} placeholder="John Smith" className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]" />
                   </div>
                   <div>
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Email *</label>
-                    <input
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={handleField}
-                      placeholder="john@email.com"
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]"
-                    />
+                    <input name="email" type="email" value={form.email} onChange={handleField} placeholder="john@email.com" className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]" />
                   </div>
                   <div>
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Phone / WhatsApp *</label>
-                    <input
-                      name="phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={handleField}
-                      placeholder="+44 7700 900000"
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]"
-                    />
+                    <input name="phone" type="tel" value={form.phone} onChange={handleField} placeholder="+44 7700 900000" className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Address *</label>
-                    <input
-                      name="address"
-                      value={form.address}
-                      onChange={handleField}
-                      placeholder="123 Main Street, Flat 2"
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]"
-                    />
+                    <input name="address" value={form.address} onChange={handleField} placeholder="123 Main Street, Flat 2" className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]" />
                   </div>
                   <div>
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">City *</label>
-                    <input
-                      name="city"
-                      value={form.city}
-                      onChange={handleField}
-                      placeholder="Edinburgh"
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]"
-                    />
+                    <input name="city" value={form.city} onChange={handleField} placeholder="Edinburgh" className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]" />
                   </div>
                   <div>
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Postcode *</label>
-                    <input
-                      name="postcode"
-                      value={form.postcode}
-                      onChange={handleField}
-                      placeholder="EH1 1AB"
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]"
-                    />
+                    <input name="postcode" value={form.postcode} onChange={handleField} placeholder="EH1 1AB" className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46]" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Special Instructions <span className="text-[#3f3f46]">(optional)</span></label>
-                    <textarea
-                      name="notes"
-                      value={form.notes}
-                      onChange={handleField}
-                      placeholder="Floor number, access code, delivery instructions..."
-                      rows={3}
-                      className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46] resize-none"
-                    />
+                    <textarea name="notes" value={form.notes} onChange={handleField} placeholder="Floor number, access code, delivery instructions..." rows={3} className="w-full bg-[#080818] border border-[#1e1e3a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46] resize-none" />
                   </div>
                 </div>
               </div>
@@ -239,6 +233,44 @@ export default function CartPage() {
                 ))}
               </div>
 
+              {/* Promo code */}
+              <div className="mb-5">
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-green-400" />
+                      <div>
+                        <div className="text-green-400 text-xs font-bold">{appliedPromo.code}</div>
+                        <div className="text-green-400/70 text-[10px]">{(appliedPromo.discountPercent * 100).toFixed(0)}% discount applied</div>
+                      </div>
+                    </div>
+                    <button onClick={handleRemovePromo} className="text-green-400/70 hover:text-green-400 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-[#a1a1aa] text-xs font-medium mb-1.5 block">Promo / Affiliate Code</label>
+                    <div className="flex gap-2">
+                      <input
+                        value={promoCode}
+                        onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError('') }}
+                        placeholder="Enter code..."
+                        className="flex-1 bg-[#080818] border border-[#1e1e3a] rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#2563eb] transition-colors placeholder-[#3f3f46] uppercase"
+                      />
+                      <button
+                        onClick={handleApplyPromo}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+                      >
+                        {promoLoading ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                    {promoError && <p className="text-red-400 text-xs mt-1.5">{promoError}</p>}
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-[#1e1e3a] pt-4 mb-2">
                 <div className="flex items-center justify-between text-sm text-[#a1a1aa] mb-2">
                   <span>Subtotal</span>
@@ -252,8 +284,14 @@ export default function CartPage() {
                   }
                 </div>
                 {!deliveryFree && (
-                  <div className="text-xs text-[#a1a1aa] bg-[#080818] border border-[#1e1e3a] rounded-lg px-3 py-2 mb-4">
+                  <div className="text-xs text-[#a1a1aa] bg-[#080818] border border-[#1e1e3a] rounded-lg px-3 py-2 mb-3">
                     Add <span className="text-white font-semibold">£{(DELIVERY_THRESHOLD - total).toFixed(2)}</span> more for free delivery
+                  </div>
+                )}
+                {appliedPromo && (
+                  <div className="flex items-center justify-between text-sm mb-3">
+                    <span className="text-green-400">Discount ({(appliedPromo.discountPercent * 100).toFixed(0)}%)</span>
+                    <span className="text-green-400 font-semibold">−£{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-[#1e1e3a]">
@@ -285,9 +323,9 @@ export default function CartPage() {
                 <button
                   onClick={handleCheckout}
                   disabled={loading || !formValid}
-                  className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors duration-200 text-base shadow-lg shadow-blue-500/20"
+                  className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors duration-200 text-base shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Redirecting...' : <><Lock className="inline w-4 h-4 mr-1" /> Proceed to Checkout</>}
+                  {loading ? 'Redirecting...' : <><Lock className="w-4 h-4" /> Proceed to Checkout</>}
                 </button>
               )}
 
