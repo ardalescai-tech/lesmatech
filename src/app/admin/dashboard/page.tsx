@@ -129,6 +129,12 @@ export default function AdminDashboard() {
           <h3 className="text-white font-bold text-lg mb-1">Site Settings</h3>
           <p className="text-[#a1a1aa] text-sm">Update contact info, social links, and business hours.</p>
         </Link>
+
+        <Link href="/admin/affiliates" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
+          <div className="text-3xl mb-3">🤝</div>
+          <h3 className="text-white font-bold text-lg mb-1">Affiliates</h3>
+          <p className="text-[#a1a1aa] text-sm">Review and manage affiliate programme applications.</p>
+        </Link>
       </div>
     </div>
   )

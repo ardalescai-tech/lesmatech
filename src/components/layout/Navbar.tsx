@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/CartContext'
+import { ShoppingCart } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Home' },
@@ -11,6 +12,7 @@ const links = [
   { href: '/web-packages', label: 'Web Packages' },
   { href: '/shop', label: 'Shop' },
   { href: '/builder', label: 'PC Builder' },
+  { href: '/affiliates', label: 'Affiliates' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
@@ -44,7 +46,7 @@ export default function Navbar() {
   }, [])
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#27272a] bg-[#0a0a0a]/90 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e3a] bg-[#05050f]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
@@ -57,7 +59,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             {links.map((link) => (
               <Link
                 key={link.href}
@@ -80,11 +82,9 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/cart"
-              className="relative border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white p-2 rounded-lg transition-colors duration-200"
+              className="relative border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white p-2 rounded-lg transition-colors duration-200"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <ShoppingCart className="w-5 h-5" />
               {count > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-[#2563eb] text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">
                   {count}
@@ -95,16 +95,16 @@ export default function Navbar() {
             {isLoggedIn ? (
               <Link
                 href="/account"
-                className="border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
+                className="border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 My Account
               </Link>
             ) : (
               <Link
                 href="/account/login"
-                className="border border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
+                className="border border-[#1e1e3a] hover:border-[#2563eb]/50 text-[#a1a1aa] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
               >
-                Sign In
+                My Account
               </Link>
             )}
 
@@ -129,7 +129,7 @@ export default function Navbar() {
         </div>
 
         {menuOpen && (
-          <div className="md:hidden border-t border-[#27272a] py-4 flex flex-col gap-4">
+          <div className="md:hidden border-t border-[#1e1e3a] py-4 flex flex-col gap-4">
             {links.map((link) => (
               <Link
                 key={link.href}
@@ -158,7 +158,7 @@ export default function Navbar() {
               </Link>
             ) : (
               <Link href="/account/login" className="text-[#a1a1aa] hover:text-white text-sm font-medium" onClick={() => setMenuOpen(false)}>
-                Sign In
+                My Account
               </Link>
             )}
             <Link
