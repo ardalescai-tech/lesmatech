@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Package, ShoppingCart, Mail, Settings, Monitor, Wrench, Globe } from 'lucide-react'
+import { Package, ShoppingCart, Mail, Settings, Monitor, Wrench, Globe, Handshake } from 'lucide-react'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, messages: 0, shopComponents: 0 })
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         </Link>
 
         <Link href="/admin/affiliates" className="bg-[#111111] border border-[#27272a] rounded-xl p-6 hover:border-[#2563eb]/50 transition-all duration-300">
-          <div className="text-3xl mb-3">🤝</div>
+          <Handshake className="w-8 h-8 text-[#a1a1aa] mb-3" />
           <h3 className="text-white font-bold text-lg mb-1">Affiliates</h3>
           <p className="text-[#a1a1aa] text-sm">Review and manage affiliate programme applications.</p>
         </Link>
